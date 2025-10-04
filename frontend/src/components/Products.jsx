@@ -111,9 +111,10 @@ const Products = () => {
                     products.map((product) => (
                         <div key={product.id} className="product-card">
                             <div className="product-image">
-                                <img 
-                                    src={product.image} 
+                                <img
+                                    src={product.image || 'https://via.placeholder.com/320x200?text=No+Image'}
                                     alt={product.name}
+                                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/320x200?text=No+Image'; }}
                                 />
                             </div>
                             <h3>{product.name}</h3>
@@ -136,7 +137,7 @@ const Products = () => {
                                 <Link to={`/product/${product.id}`} state={{ product }} className="see-reviexs-btn">
                                     Voir
                                 </Link>
-                                <button onClick={() => handleAddToCart(product)} className="add-to-cart-button">
+                                <button onClick={() => { addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 }); toast.success(`${product.name} ajouté au panier`); }} className="add-to-cart-button">
                                     Ajouter au panier
                                 </button>
                             </div>

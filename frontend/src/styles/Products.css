@@ -108,6 +108,14 @@ body {
     transition: background .12s ease, transform .08s ease;
 }
 
+/* Recommendation-specific smaller button to avoid stretching product cards */
+.recommendations .product-card .add-to-cart-button{
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    flex: 0 0 auto;
+    margin-top: 8px;
+}
+
 .add-to-cart-button:hover,
 .add-to-cart-btn:hover{
     background: var(--accent-600);

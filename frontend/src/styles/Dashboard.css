@@ -70,6 +70,10 @@
 
 .admin-actions{
     margin-top: 12px;
+
+    display: flex;         /* Active Flexbox */
+    flex-direction: column; /* Force les éléments à s'empiler verticalement */
+    gap: 8px; 
 }
 
 .admin-actions button{

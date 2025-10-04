@@ -38,9 +38,11 @@ urlpatterns = [
     path('api/orders/<int:order_id>/create_payment_intent', create_payment_intent, name='create_payment_intent'),
     path('api/orders/<int:order_id>/mark_paid/', mark_order_paid, name='mark_order_paid'),
     
+    
     path('api/user_view_orders/', UserOrderListView.as_view(), name='user_view_orders'),
     
     path('products/<int:product_id>/reviews/', ProductReviewList.as_view(), name='product_reviews'),
+    path('api/products/<int:product_id>/recommendations/', ProductRecommendations.as_view(), name='product_recommendations'),
     path('', include(router.urls)),
     
 ]

@@ -176,7 +176,7 @@ const Dashboard = () => {
                 </div>
                 <div className="admin-actions"> 
                     <button onClick={() => navigate('/api/products')}>Gérer les produits</button>
-                    <button onClick={() => navigate('/')}>Verifier vos</button>
+                    <button onClick={() => navigate('/')}>Verifier vos produit !</button>
                 </div>
             </div>
     )

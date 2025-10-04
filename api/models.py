@@ -63,6 +63,7 @@ class Order(models.Model):
     #payment details fields
     payment_completed = models.BooleanField(default=False)
     payement_id = models.CharField(max_length=255, null=True, blank=True)
+   
     
     def __str__(self):
         return f"Order {self.id} by {self.user.username} - Status: {self.status}"

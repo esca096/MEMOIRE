@@ -109,6 +109,7 @@ const OrderConfirmation = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [clientSecret, setClientSecret] = useState('');
+    // iPay integration removed from UI for now
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -116,8 +117,14 @@ const OrderConfirmation = () => {
                 const response = await api.get(`api/orders/${id}/`);
                 setOrderDetails(response.data);
                 if (response.data.status !== 'COMPLETED') {
-                    const paymentResponse = await api.post(`api/orders/${id}/create_payment_intent`);
-                    setClientSecret(paymentResponse.data.clientSecret);
+                    // prepare stripe clientSecret as before
+                    try {
+                        const paymentResponse = await api.post(`api/orders/${id}/create_payment_intent`);
+                        setClientSecret(paymentResponse.data.clientSecret);
+                    } catch (err) {
+                        // ignore if stripe not configured or failed
+                        console.warn('Stripe create intent failed', err);
+                    }
                 }
             } catch (error) {
                 setError(error.message);
@@ -166,10 +173,16 @@ const OrderConfirmation = () => {
                 <p>{status}</p>
             </div>
 
-            {clientSecret && orderDetails && status !== "COMPLETED" && (
-            <Elements stripe={stripePromise}>
-                <PaymentForm  orderId={id} orderDetails={orderDetails} clientSecret={clientSecret} />
-            </Elements>
+            {status !== "COMPLETED" && (
+            <div className="payment-options">
+                {clientSecret && (
+                    <Elements stripe={stripePromise}>
+                        <PaymentForm  orderId={id} orderDetails={orderDetails} clientSecret={clientSecret} />
+                    </Elements>
+                )}
+
+                {/* iPay UI removed per request */}
+            </div>
             )}
             {status === "COMPLETED" && 
                 <p className='confirmation-message'>

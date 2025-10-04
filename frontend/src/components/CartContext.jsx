@@ -64,28 +64,71 @@ export const CartProvider = ({ children }) => {
     }, []);
 
     const addToCart = async (item) => {
-        dispatch({ type: "ADD_TO_CART", payload: item });
-        await updateCart(state.cart);
+        // compute new cart deterministically so we can immediately sync to server
+        const existingProductIndex = state.cart.findIndex(i => i.id === item.id);
+        let newCart;
+        const quantityToAdd = item.quantity || 1;
+        if (existingProductIndex >= 0) {
+            newCart = [...state.cart];
+            newCart[existingProductIndex] = { ...newCart[existingProductIndex], quantity: (newCart[existingProductIndex].quantity || 0) + quantityToAdd };
+        } else {
+            newCart = [...state.cart, { ...item, quantity: quantityToAdd }];
+        }
+        dispatch({ type: "SET_CART", payload: newCart });
+        try {
+            await updateCart(newCart);
+        } catch (e) {
+            console.error('Failed to sync cart after add:', e);
+        }
     };
 
     const removeFromCart = async (id) => {
-        dispatch({ type: "REMOVE_FROM_CART", payload:  { id }  });
-        await updateCart(state.cart);
+        const newCart = state.cart.filter(item => item.id !== id);
+        dispatch({ type: "SET_CART", payload: newCart });
+        try {
+            await updateCart(newCart);
+        } catch (e) {
+            console.error('Failed to sync cart after remove:', e);
+        }
     };
 
     const removeFromQuantityCart = async (id) => {
-        dispatch({ type: "REMOVE_QUANTITY", payload: { id } });
-        await updateCart(state.cart);
+        const itemIndex = state.cart.findIndex(item => item.id === id);
+        if (itemIndex < 0) return;
+        const newCart = [...state.cart];
+        if ((newCart[itemIndex].quantity || 0) > 1) {
+            newCart[itemIndex] = { ...newCart[itemIndex], quantity: newCart[itemIndex].quantity - 1 };
+        } else {
+            newCart.splice(itemIndex, 1);
+        }
+        dispatch({ type: "SET_CART", payload: newCart });
+        try {
+            await updateCart(newCart);
+        } catch (e) {
+            console.error('Failed to sync cart after decrease quantity:', e);
+        }
     };
 
     const increaseQuantityCart = async (id) => {
-        dispatch({ type: "INCREASE_QUANTITY", payload: { id } });
-        await updateCart(state.cart);
+        const itemIndex = state.cart.findIndex(item => item.id === id);
+        if (itemIndex < 0) return;
+        const newCart = [...state.cart];
+        newCart[itemIndex] = { ...newCart[itemIndex], quantity: (newCart[itemIndex].quantity || 0) + 1 };
+        dispatch({ type: "SET_CART", payload: newCart });
+        try {
+            await updateCart(newCart);
+        } catch (e) {
+            console.error('Failed to sync cart after increase quantity:', e);
+        }
     };
 
     const clearCart = async () => {
-        dispatch({ type: "CLEAR_CART" });
-        await updateCart([]);
+        dispatch({ type: "SET_CART", payload: [] });
+        try {
+            await updateCart([]);
+        } catch (e) {
+            console.error('Failed to sync cart after clear:', e);
+        }
     };
     // Provide the cart state and actions to the context
     return (
