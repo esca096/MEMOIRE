@@ -1,4 +1,25 @@
-import Ract from "react"
+/**
+ * Fichier: App.jsx (Composant racine React)
+ * 
+ * Description (FR):
+ * - Composant principal qui définit la structure de l'application React
+ * - Configure le routage avec React Router DOM
+ * - Gère la logique de protection des routes selon l'authentification
+ * - Définit l'architecture globale de l'application
+ * 
+ * Structure principale :
+ * - Router BrowserRouter pour la navigation SPA
+ * - Routes protégées et publiques
+ * - Layout commun avec Navbar et Footer
+ * - Système de notifications Toast
+ * 
+ * Connexions :
+ * - Intègre tous les composants de pages et fonctionnalités
+ * - Utilise le hook d'authentification pour la protection des routes
+ * - Coordonne la navigation entre toutes les sections de l'application
+ */
+
+import React from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import Navbar from "./components/Navbar"
 import NotFound from "./pages/NotFound"
@@ -23,6 +44,8 @@ import Footer from "./components/Footer"
 function App() {
   
   const { isAuthorized } = useAuthentication()
+  
+  // Composants pour les routes protégées de connexion
   const ProtectedLogin = () => {
     return isAuthorized ? <Navigate to='/dashboard' /> : <AuthPage initialMethod='login' />
   }
@@ -32,30 +55,35 @@ function App() {
 
   return (
     <div className="app-root">
-      <BrowserRouter>
-        <Navbar />
-        <ToastContainer /> {/* ToastContainer is used to display toast notifications */}
-        <main className="main-content">
+      <BrowserRouter>  {/* Fournit le contexte de routage */}
+        <Navbar />  {/* Barre de navigation présente sur toutes les pages */}
+        <ToastContainer /> {/* Container pour les notifications toast */}
+        <main className="main-content">  {/* Contenu principal de l'application */}
           <Routes>
-          <Route path="/login/callback" element={<RedirectGoogleAuth />} />
-          <Route path="/login" element={<ProtectedLogin />} />
-          <Route path="/register" element={<ProtectedRegister />} />
-          <Route path="/dashboard" element={isAuthorized? <Dashboard /> : <Navigate to='/login' />} />
-          <Route path="/api/products" element={<AdminProductList />} />
-          <Route path="/api/products/:id" element={<AdminProductEdit />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/why" element={<Why />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/cart" element={isAuthorized? <Cart /> : <Navigate to='/login' />} />
-          <Route path="/checkout" element={isAuthorized? <Checkout /> : <Navigate to='/login' />} />
-          <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
-          <Route path="/reviews/:id" element={<ReviewForm />} />
-          <Route path="/" element={<Home />} />
-          <Route path="*" element={<NotFound/>} />
+            {/* Routes d'authentification et callback OAuth */}
+            <Route path="/login/callback" element={<RedirectGoogleAuth />} />  {/* Callback Google OAuth */}
+            <Route path="/login" element={<ProtectedLogin />} />  {/* Page de connexion protégée */}
+            <Route path="/register" element={<ProtectedRegister />} />  {/* Page d'inscription protégée */}
+            
+            {/* Routes protégées par authentification */}
+            <Route path="/dashboard" element={isAuthorized? <Dashboard /> : <Navigate to='/login' />} />  {/* Tableau de bord utilisateur */}
+            <Route path="/api/products" element={<AdminProductList />} />  {/* Liste des produits (admin) */}
+            <Route path="/api/products/:id" element={<AdminProductEdit />} />  {/* Édition produit (admin) */}
+            <Route path="/cart" element={isAuthorized? <Cart /> : <Navigate to='/login' />} />  {/* Panier d'achat */}
+            <Route path="/checkout" element={isAuthorized? <Checkout /> : <Navigate to='/login' />} />  {/* Paiement */}
+            
+            {/* Routes publiques */}
+            <Route path="/product/:id" element={<ProductDetail />} />  {/* Détail d'un produit */}
+            <Route path="/why" element={<Why />} />  {/* Page "Pourquoi nous choisir" */}
+            <Route path="/about" element={<About />} />  {/* Page "À propos" */}
+            <Route path="/contact" element={<Contact />} />  {/* Page de contact */}
+            <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />  {/* Confirmation de commande */}
+            <Route path="/reviews/:id" element={<ReviewForm />} />  {/* Formulaire d'avis */}
+            <Route path="/" element={<Home />} />  {/* Page d'accueil */}
+            <Route path="*" element={<NotFound/>} />  {/* Route 404 - page non trouvée */}
           </Routes>
         </main>
-        <Footer />
+        <Footer />  {/* Pied de page présent sur toutes les pages */}
       </BrowserRouter>
     </div>
   )

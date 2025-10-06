@@ -1,21 +1,72 @@
-asgiref==3.8.1
-certifi==2025.4.26
-cffi==1.17.1
-charset-normalizer==3.4.2
-cryptography==44.0.3
-Django==5.2
-django-allauth==65.7.0
-django-cors-headers==4.7.0
-djangorestframework==3.16.0
-djangorestframework_simplejwt==5.5.0
-idna==3.10
-pillow==11.3.0
-pycparser==2.22
-PyJWT==2.9.0
-python-decouple==3.8
-python-dotenv==1.1.1
-requests==2.32.3
-sqlparse==0.5.3
-stripe==12.3.0
-typing_extensions==4.14.1
-urllib3==2.4.0
+# Fichier: requirements.txt
+# Description (FR):
+# - Liste des dépendances Python nécessaires pour exécuter le backend Django
+# - Contient toutes les bibliothèques pour l'API, l'authentification, les recommandations ML, et les paiements
+# - Installation: pip install -r requirements.txt
+
+# =============================================================================
+# CŒUR DJANGO ET COMPOSANTS ESSENTIELS
+# =============================================================================
+Django==5.2                 # Framework web principal
+asgiref==3.8.1              # Support ASGI pour le serveur asynchrone
+sqlparse==0.5.3             # Analyseur SQL pour le débogage des requêtes
+tzdata==2025.2              # Bases de données des fuseaux horaires
+
+# =============================================================================
+# API REST ET SÉRIALISATION
+# =============================================================================
+djangorestframework==3.16.0 # Framework pour construire les API REST
+djangorestframework_simplejwt==5.5.0  # JSON Web Tokens pour l'authentification API
+
+# =============================================================================
+# AUTHENTIFICATION ET AUTORISATION
+# =============================================================================
+django-allauth==65.7.0      # Système d'authentification unifiée (comptes sociaux)
+PyJWT==2.9.0                # Implémentation des JSON Web Tokens
+django-cors-headers==4.7.0  # Gestion des en-têtes CORS pour les requêtes cross-origin
+
+# =============================================================================
+# MACHINE LEARNING ET SYSTÈME DE RECOMMANDATION
+# =============================================================================
+scikit-learn==1.7.2         # Machine Learning: TF-IDF, similarité cosinus, clustering
+numpy==2.3.3                # Calcul numérique pour les opérations matricielles
+scipy==1.16.2               # Algorithmes scientifiques et mathématiques avancés
+joblib==1.5.2               # Sauvegarde et chargement des modèles ML entraînés
+threadpoolctl==3.6.0        # Contrôle du parallélisme dans scikit-learn
+
+# =============================================================================
+# SÉCURITÉ ET CRYPTOGRAPHIE
+# =============================================================================
+cryptography==44.0.3        # Chiffrement pour les données sensibles et tokens
+cffi==1.17.1                # Interface Foreign Function pour Python
+pycparser==2.22             # Parser C utilisé par cffi
+
+# =============================================================================
+# COMMUNICATION RÉSEAU ET APIS EXTERNES
+# =============================================================================
+requests==2.32.3            # Client HTTP pour les appels d'APIs externes
+urllib3==2.4.0              # Bibliothèque HTTP sous-jacente à requests
+certifi==2025.4.26          # Certificats SSL racines pour les connexions HTTPS
+idna==3.10                  # Support Internationalized Domain Names (IDNA)
+charset-normalizer==3.4.2   # Détection automatique de l'encodage des caractères
+
+# =============================================================================
+# GESTION DES MÉDIAS ET IMAGES
+# =============================================================================
+pillow==11.3.0              # Traitement et manipulation des images uploadées
+
+# =============================================================================
+# CONFIGURATION ET VARIABLES D'ENVIRONNEMENT
+# =============================================================================
+python-decouple==3.8        # Gestion sécurisée des variables d'environnement
+python-dotenv==1.1.1        # Chargement des variables depuis le fichier .env
+
+# =============================================================================
+# PAIEMENTS EN LIGNE
+# =============================================================================
+stripe==12.3.0              # Intégration de l'API Stripe pour le traitement des paiements
+
+# =============================================================================
+# UTILITAIRES ET COMPATIBILITÉ
+# =============================================================================
+typing_extensions==4.14.1   # Support des fonctionnalités de typage avancées
