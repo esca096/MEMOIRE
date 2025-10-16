@@ -25,6 +25,7 @@ from datetime import timedelta
 import os
 from decouple import config  # Pour les variables d'environnement
 from corsheaders.defaults import default_headers
+import dj_database_url
 
 # =============================================================================
 # CONFIGURATION DES CHEMINS DU PROJET
@@ -38,7 +39,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =============================================================================
 # SECRET_KEY: Clé secrète pour le hachage et la sécurité
 # ⚠️  EN PRODUCTION: Doit être stockée dans les variables d'environnement
-SECRET_KEY = 'django-insecure-8xu6l_yn7ab4q5_#fau=5!-#1^8=bls=2q_da%5zk550gz&tau'
+SECRET_KEY = config("DJANGO_SECRET_KEY")
 
 # DEBUG: Mode débogage - affiche les erreurs détaillées
 # ⚠️  EN PRODUCTION: Doit être mis à False
@@ -53,6 +54,7 @@ ALLOWED_HOSTS = ["*"]
 # =============================================================================
 INSTALLED_APPS = [
     # Applications Django par défaut
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',        # Interface d'administration
     'django.contrib.auth',         # Système d'authentification
     'django.contrib.contenttypes', # Système de types de contenu
@@ -76,6 +78,7 @@ INSTALLED_APPS = [
 # =============================================================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',      # Sécurité HTTP
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware', # Gestion sessions
     'corsheaders.middleware.CorsMiddleware',              # CORS (doit être placé tôt)
     'django.middleware.common.CommonMiddleware',          # Normalisation URLs
@@ -112,13 +115,22 @@ WSGI_APPLICATION = 'tech_shop.wsgi.application'
 # =============================================================================
 # CONFIGURATION DE LA BASE DE DONNÉES
 # =============================================================================
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Base de données SQLite
-        'NAME': BASE_DIR / 'db.sqlite3',         # Fichier de la base de données
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',  # Base de données SQLite
+#         'NAME': BASE_DIR / 'db.sqlite3',         # Fichier de la base de données
+#     }
+# }
 # ⚠️  EN PRODUCTION: Remplacer par PostgreSQL/MySQL avec variables d'environnement
+
+database_password = config("DATABASE_PASSWORD")
+
+DATABASES = {
+    'default': dj_database_url.parse(
+        config('DATABASE_URL'),
+        conn_max_age=600  # Garde la connexion ouverte (optionnel)
+    )
+}
 
 # =============================================================================
 # VALIDATION DES MOTS DE PASSE
@@ -155,11 +167,11 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "X-Google-Access-Token",  # Header personnalisé pour l'authentification Google
 ]
 
-# Autorise toutes les origines (développement seulement)
-CORS_ORIGIN_ALLOW_ALL = True
-
-# Autorise l'envoi de cookies et credentials
 CORS_ALLOWS_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    'https://tech-shop-rho.vercel.app',  # Frontend URL PRD
+]
 
 # =============================================================================
 # CONFIGURATION JWT (JSON WEB TOKENS)
@@ -196,6 +208,8 @@ MEDIA_ROOT = BASE_DIR /'media'  # Dossier de stockage des fichiers uploadés
 # =============================================================================
 STATIC_URL = 'static/'    # URL pour les fichiers statiques (CSS, JS)
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # =============================================================================
 # CONFIGURATION AUTRE
 # =============================================================================
@@ -223,3 +237,7 @@ SOCIALACCOUNT_STORE_TOKENS = True  # Stockage des tokens OAuth
 # =============================================================================
 # Clé secrète Stripe récupérée depuis les variables d'environnement
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY")
+
+GDAL_LIBRARY_PATH = 'C:/Program Files/GDAL/gdal.dll'
+
+GEOS_LIBRARY_PATH = 'C:/Program Files/GDAL/geos_c.dll'

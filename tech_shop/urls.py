@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from api.views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -8,6 +8,9 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 from rest_framework.routers import DefaultRouter
+
+from django.conf.urls.static import static
+from django.views.static import serve 
 
 # =============================================================================
 # ROUTER POUR LES VIEWSETS
@@ -21,6 +24,7 @@ router.register(r'reviews', ReviewViewSet)  # CRUD complet pour les avis
 # CONFIGURATION DES URLS PRINCIPALES
 # =============================================================================
 urlpatterns = [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),  # Servir les fichiers média en développement
     # -------------------------------------------------------------------------
     # ADMINISTRATION
     # -------------------------------------------------------------------------
