@@ -170,7 +170,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 CORS_ALLOWS_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    'https://memoire-hazel.vercel.app/',  # Frontend URL PRD
+    'https://memoire-hazel.vercel.app',  # Frontend URL PRD
 ]
 
 # =============================================================================
