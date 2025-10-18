@@ -5,6 +5,8 @@
     padding: 20px;
     background-color: #f0f0f0;
     overflow: hidden;
+    position: relative;
+    min-height: 400px; /* AJOUT: Hauteur minimale */
 }
 
 .header-bg {
@@ -15,12 +17,14 @@
 
 .header-content {
     margin-left: 20px;
+    flex: 1;
 }
 
+/* MODIFICATION: Utilisation de unités responsives (vw + clamp) */
 .header h1 {
-    font-size: 5em;
+    font-size: clamp(2rem, 5vw, 4rem); /* MODIFIÉ: Taille responsive */
     margin: 0 0 10px 0;
-    line-height: 110%;
+    line-height: 1.2; /* MODIFIÉ: Meilleur line-height */
     margin-left: 50px;
     color: #091251;
     font-weight: 700;
@@ -30,7 +34,7 @@
 }
 
 .header h3 {
-    font-size: 3.5em;
+    font-size: clamp(1.5rem, 3vw, 2.5rem); /* MODIFIÉ: Taille responsive */
     margin: 0;
     margin-left: 50px;
     color: #091251;
@@ -38,18 +42,24 @@
     animation: fadeInUp 1s ease-in-out forwards;
     animation-delay: 1s;
 }
+
 .header button {
-    font-size: 1em;
+    font-size: clamp(1rem, 2vw, 1.2rem); /* MODIFIÉ: Taille responsive */
     border: none;
-    margin: 0;
-    margin-left: 50px;
+    margin: 20px 0 0 50px; /* MODIFIÉ: Marge améliorée */
     color: whitesmoke;
     background-color: #3D56FF;
     opacity: 0;
     animation: fadeInUp 1s ease-in-out forwards;
-    animation-delay: 1s;
-    padding: 15px;
-    border-radius: 15px;
+    animation-delay: 1.5s;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.header button:hover {
+    background-color: #2C44CC;
 }
 
 @keyframes fadeInUp {
@@ -67,20 +77,62 @@
     .header {
         flex-direction: column;
         text-align: center;
+        padding: 15px;
+        min-height: 300px; /* AJOUT: Hauteur adaptée mobile */
     }
 
     .header-bg {
         width: 100%;
         max-width: 100%;
+        margin-bottom: 20px;
     }
 
     .header-content {
         margin-left: 0;
+        width: 100%;
     }
 
     .header h1,
     .header h3 {
         animation: none;
         opacity: 1;
+        margin-left: 0; /* MODIFIÉ: Supprime le décalage */
+        font-size: clamp(1.8rem, 6vw, 3rem); /* AJOUT: Taille mobile optimisée */
+    }
+
+    .header h3 {
+        font-size: clamp(1.3rem, 4vw, 2rem); /* AJOUT: Taille mobile optimisée */
+    }
+
+    .header button {
+        margin: 20px auto 0 auto; /* MODIFIÉ: Centrage du bouton */
+        display: block;
+        font-size: 1.1rem;
+        padding: 10px 20px;
+    }
+}
+
+/* AJOUT: Media query pour très petits écrans */
+@media (max-width: 480px) {
+    .header {
+        padding: 10px;
+        min-height: 250px;
+    }
+
+    .header h1 {
+        font-size: clamp(1.5rem, 8vw, 2.5rem);
+        line-height: 1.1;
+        margin-bottom: 8px;
+    }
+
+    .header h3 {
+        font-size: clamp(1.1rem, 5vw, 1.8rem);
+        margin-bottom: 15px;
+    }
+
+    .header button {
+        font-size: 1rem;
+        padding: 8px 16px;
+        margin-top: 15px;
     }
 }
