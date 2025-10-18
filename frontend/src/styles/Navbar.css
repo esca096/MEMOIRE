@@ -1,10 +1,17 @@
 /* Navbar.css */
+
+/* ================================================= */
+/* 1. STYLES DE BASE (Bureau/Desktop) */
+/* ================================================= */
+
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 20px;
     background-color: whitesmoke;
+    position: relative; /* Pour le positionnement du popover */
+    z-index: 100; /* Assure que la navbar est au-dessus */
 }
 
 .navbar-logo-link {
@@ -16,6 +23,11 @@
 .navbar-logo {
     height: 50px;
     cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.navbar-logo:hover {
+    transform: scale(1.05);
 }
 
 .navbar-menu-left,
@@ -29,109 +41,368 @@
 }
 
 .navbar-menu-left {
-    margin-left: 80px; /* Add space between the logo and left menu */
+    margin-left: 80px;
     gap: 55px;
 }
 
 .navbar-menu-left a {
     color: #5f6063;
-    text-decoration: none; /* Remove underline */
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 4px;
 }
 
 .navbar-menu-left a:hover {
     color: #171717;
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .navbar-menu-right {
     margin-left: auto;
+    gap: 20px;
 }
 
 .navbar-menu-right a {
-    text-decoration: none; /* Remove underline */
+    text-decoration: none;
 }
 
-.navbar-menu li {
-    position: relative;
-}
-
-
+/* Styles des boutons et liens */
 .button-link {
     background-color: #3D56FF;
     color: white !important;
     border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
     cursor: pointer;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 100px;
 }
 
 .button-link-login {
-    color: #3D56FF;
+    color: #3D56FF !important;
     font-weight: 700;
     cursor: pointer;
-    text-decoration: none; /* Remove underline */
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.button-link-login:hover {
+    background-color: rgba(61, 86, 255, 0.1);
 }
 
 .button-link:hover,
 .button-link:focus {
     background-color: #2C44CC;
-    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(61, 86, 255, 0.3);
 }
 
-/* Navbar.css */
+/* Styles des icônes/dashboard */
 .dashboard-icon {
-    width: 40px;  /* Adjust size as needed */
-    height: 40px; /* Adjust size as needed */
-    background-color: #3D56FF; /* Example background color */
+    width: 40px;
+    height: 40px;
+    background-color: #3D56FF;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%; /* Makes it circular */
-    font-size: 16px; /* Font size for initials */
-    margin-right: 10px; /* Space between the icon and logout */
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
 }
-.dashboard-icon a{
-    color: white!important; /* Text color */
+
+.dashboard-icon:hover {
+    background-color: #2C44CC;
+    transform: scale(1.1);
+}
+
+.dashboard-icon a {
+    color: white !important;
+    text-decoration: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cart-icon {
     position: relative;
-    margin-right: 20px;
+    margin-right: 10px;
 }
 
-.cart-icon i {
-    font-size: 24px;
-    color: #333;
-    cursor: pointer;
+.cart-icon a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.cart-icon a:hover {
+    background-color: rgba(0, 123, 255, 0.1);
 }
 
 .cart-count {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -5px;
+    right: -5px;
     background-color: #007bff;
     color: #fff;
-    font-size: 12px;
-    padding: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
     border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
+/* ================================================= */
+/* 2. STYLES DU BOUTON HAMBURGER */
+/* ================================================= */
+
+.navbar-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    color: #333;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.navbar-hamburger:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #3D56FF;
+}
+
+.navbar-hamburger:focus {
+    outline: 2px solid #3D56FF;
+    outline-offset: 2px;
+}
+
+/* ================================================= */
+/* 3. STYLES DU POPOVER (Menu Déroulant Mobile) */
+/* ================================================= */
+
+.navbar-popover {
+    position: absolute;
+    top: 100%;
+    right: 12px;
+    left: 12px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(20, 32, 51, 0.15);
+    padding: 16px 0;
+    z-index: 99;
+    margin-top: 8px;
+    border: 1px solid #e1e5e9;
+    animation: popoverFadeIn 0.3s ease;
+}
+
+@keyframes popoverFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.navbar-popover ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.navbar-popover li {
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-popover a {
+    color: #203545;
+    text-decoration: none;
+    padding: 12px 20px;
+    display: block;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-radius: 0;
+}
+
+.navbar-popover a:hover {
+    background-color: #f8f9fa;
+    color: #3D56FF;
+}
+
+/* Styles spécifiques pour les boutons dans le popover */
+.navbar-popover .button-link,
+.navbar-popover .button-link-login {
+    margin: 8px 20px;
+    text-align: center;
+    display: block;
+    min-width: auto;
+}
+
+.navbar-popover .dashboard-icon,
+.navbar-popover .cart-icon {
+    display: inline-flex;
+    margin: 0 auto;
+}
+
+.navbar-popover .cart-icon a {
+    background: none !important;
+}
+
+/* ================================================= */
+/* 4. STYLES ADAPTATIFS (Media Queries) */
+/* ================================================= */
+
+/* Tablette et mobile */
 @media (max-width: 768px) {
+    /* Cache les menus de bureau */
     .navbar-menu-left,
     .navbar-menu-right {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        display: none;
     }
-
-    .navbar-menu-right {
-        margin-left: 0;
+    
+    /* Affiche le bouton hamburger */
+    .navbar-hamburger {
+        display: flex;
+    }
+    
+    /* Ajuste la taille du logo */
+    .navbar-logo {
+        height: 44px;
+    }
+    
+    /* Ajuste le padding de la navbar */
+    .navbar {
+        padding: 8px 16px;
+    }
+    
+    .navbar-menu-left {
+        margin-left: 40px;
+        gap: 30px;
     }
 }
 
-/* Better handling for very small phones */
-@media (max-width: 420px) {
-    .navbar-logo { height: 40px }
-    .navbar-menu-left { margin-left: 0; gap: 12px }
-    .navbar { padding: 8px 12px }
+/* Téléphones mobiles */
+@media (max-width: 480px) {
+    .navbar {
+        padding: 6px 12px;
+    }
+    
+    .navbar-logo {
+        height: 40px;
+    }
+    
+    .navbar-menu-left {
+        margin-left: 0;
+        gap: 20px;
+    }
+    
+    .navbar-popover {
+        right: 8px;
+        left: 8px;
+        padding: 12px 0;
+    }
+    
+    .navbar-popover a {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Très petits téléphones */
+@media (max-width: 360px) {
+    .navbar {
+        padding: 4px 8px;
+    }
+    
+    .navbar-logo {
+        height: 36px;
+    }
+    
+    .navbar-hamburger {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+    
+    .navbar-popover {
+        right: 6px;
+        left: 6px;
+    }
+}
+
+/* ================================================= */
+/* 5. ÉTATS ET ACCESSIBILITÉ */
+/* ================================================= */
+
+/* États focus pour l'accessibilité */
+.navbar a:focus,
+.navbar button:focus {
+    outline: 2px solid #3D56FF;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Animation de réduction du logo au scroll (optionnel) */
+.navbar.scrolled .navbar-logo {
+    height: 40px;
+    transition: height 0.3s ease;
+}
+
+/* Support du mode sombre (optionnel) */
+@media (prefers-color-scheme: dark) {
+    .navbar {
+        background-color: #1a1a1a;
+    }
+    
+    .navbar-menu-left a {
+        color: #cccccc;
+    }
+    
+    .navbar-menu-left a:hover {
+        color: #ffffff;
+    }
+    
+    .navbar-popover {
+        background: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .navbar-popover a {
+        color: #cccccc;
+    }
+    
+    .navbar-popover a:hover {
+        background-color: #404040;
+        color: #ffffff;
+    }
 }
