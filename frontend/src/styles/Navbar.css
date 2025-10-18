@@ -205,18 +205,19 @@
 /* ================================================= */
 
 .navbar {
-    position: relative; /* AJOUTÉ - important pour le positionnement */
+    position: relative; /* IMPORTANT - pour le positionnement */
 }
 
 .hamburger-container {
-    position: relative; /* AJOUTÉ - contexte pour le popover */
+    position: relative; /* IMPORTANT - contexte pour le popover */
 }
 
 .navbar-popover {
     position: absolute;
-    top: calc(100% + 5px); /* MODIFIÉ - juste en dessous du bouton */
-    right: 0; /* MODIFIÉ - aligné à droite du conteneur */
-    width: 280px; /* AJOUTÉ - largeur fixe */
+    top: 100%; /* MODIFIÉ - directement en dessous du bouton */
+    right: 0;
+    width: 280px; /* Largeur fixe */
+    max-width: calc(100vw - 24px); /* EMPÊCHE le débordement */
     background: white;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(20, 32, 51, 0.15);
@@ -334,9 +335,8 @@
     }
     
     .navbar-popover {
-        right: 8px;
-        left: 8px;
-        padding: 12px 0;
+        width: 260px; /* AJOUTÉ */
+        max-width: calc(100vw - 16px); /* AJOUTÉ */
     }
     
     .navbar-popover a {
@@ -362,8 +362,13 @@
     }
     
     .navbar-popover {
-        right: 6px;
-        left: 6px;
+        width: 240px; /* AJOUTÉ */
+        max-width: calc(100vw - 12px); /* AJOUTÉ */
+    }
+    
+    .navbar-popover a {
+        padding: 10px 16px;
+        font-size: 14px;
     }
 }
 
