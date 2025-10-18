@@ -204,17 +204,24 @@
 /* 3. STYLES DU POPOVER (Menu Déroulant Mobile) */
 /* ================================================= */
 
+.navbar {
+    position: relative; /* AJOUTÉ - important pour le positionnement */
+}
+
+.hamburger-container {
+    position: relative; /* AJOUTÉ - contexte pour le popover */
+}
+
 .navbar-popover {
     position: absolute;
-    top: 100%;
-    right: 12px;
-    left: 12px;
+    top: calc(100% + 5px); /* MODIFIÉ - juste en dessous du bouton */
+    right: 0; /* MODIFIÉ - aligné à droite du conteneur */
+    width: 280px; /* AJOUTÉ - largeur fixe */
     background: white;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(20, 32, 51, 0.15);
     padding: 16px 0;
     z-index: 99;
-    margin-top: 8px;
     border: 1px solid #e1e5e9;
     animation: popoverFadeIn 0.3s ease;
 }
