@@ -10,7 +10,7 @@ from django.conf import settings
 from rest_framework.routers import DefaultRouter
 
 # pour ipaymoney
-from .views_ipaymoney import ipaymoney_callback, ipaymoney_redirect, get_ipaymoney_config
+from api.views_ipaymoney import ipaymoney_callback, ipaymoney_redirect, get_ipaymoney_config
 
 from django.conf.urls.static import static
 from django.views.static import serve 
