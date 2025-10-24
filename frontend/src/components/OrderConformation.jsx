@@ -26,6 +26,8 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import api from '../api';  // Client API Axios
 import "../styles/OrderConfirmation.css";  // Styles CSS de la confirmation
 
+import IpayMoneyButton from './IpayMoneyButton'; // pour ipaymoney
+
 // Chargement de la clé publique Stripe depuis les variables d'environnement
 const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY
 console.log(STRIPE_PUB_KEY)
@@ -212,7 +214,35 @@ const OrderConfirmation = () => {
                     </Elements>
                 )}
 
-                {/* Interface iPay retirée comme demandé */}
+                {/* Interface iPay  */}
+                
+                 {/* Séparateur */}
+                <div className="payment-separator">
+                    <span>OU</span>
+                </div>
+
+                {/* Option IpayMoney (NOUVELLE) */}
+                <div className="ipaymoney-option">
+                    <h3>Payer avec IpayMoney</h3>
+                    <IpayMoneyButton 
+                    orderId={id}
+                    amount={parseFloat(total_price)}
+                    onSuccess={() => {
+                    console.log('Paiement IpayMoney réussi');
+                    // Recharger les détails de la commande
+                    window.location.reload();
+                    }}
+                    onError={(error) => {
+                    console.error('Erreur IpayMoney:', error);
+                    setError(error);
+                    }}
+                />
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                Paiement sécurisé par IpayMoney
+                </p>
+            </div>
+
+                
             </div>
             )}
             {/* Message de confirmation si la commande est déjà complétée */}
