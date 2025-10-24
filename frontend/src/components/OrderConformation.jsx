@@ -19,23 +19,26 @@
  * - React Router pour la navigation et les paramètres d'URL
  */
 
+/**
+ * Fichier: frontend/src/components/OrderConfirmation.jsx
+ * 
+ * INTÉGRATION SIMPLE IPAYMONEY - Bouton direct selon documentation
+ */
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import api from '../api';
 import "../styles/OrderConfirmation.css";
-
-import IpayMoneyButton from './IpayMoneyButton';
 
 // Chargement de la clé publique Stripe
 const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY
 const stripePromise = loadStripe(STRIPE_PUB_KEY)
 
 // Composant SafeImage pour gérer les images manquantes
-const SafeImage = ({ src, alt, className, fallback = '/default-product.png' }) => {
+const SafeImage = ({ src, alt, className, fallback = '/images/default-product.png' }) => {
     const [imgSrc, setImgSrc] = useState(src);
-
     return (
         <img 
             src={imgSrc} 
@@ -46,15 +49,13 @@ const SafeImage = ({ src, alt, className, fallback = '/default-product.png' }) =
     );
 };
 
-// Composant de formulaire de paiement Stripe CORRIGÉ
+// Composant de formulaire de paiement Stripe
 const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
-
-    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -80,24 +81,12 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
         } else {
             if (result.paymentIntent.status === 'succeeded') {
                 const paymentId = result.paymentIntent.id;
-
-                await api.post(`api/orders/${orderId}/mark_paid/`,{
-                    payment_id: paymentId,
-                })
-
+                await api.post(`api/orders/${orderId}/mark_paid/`,{ payment_id: paymentId });
                 setPaymentSuccess(true);
             }
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        if (paymentSuccess) {
-            setTimeout(() => {
-                navigate(`/reviews/${orderId}`);
-            }, 3000);
-        }
-    }, [paymentSuccess, navigate, orderId]);
 
     return (
         <div className="payment-form">
@@ -105,7 +94,6 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
                 <h3 className='success-message'>Paiement réussi! Votre commande est confirmée.</h3>
             ) : (
                 <form onSubmit={handleSubmit} className='payment-form__form'>
-                    {/* CORRECTION : Options Stripe simplifiées sans propriétés CSS interdites */}
                     <div className="stripe-element-container">
                         <CardElement 
                             options={{
@@ -114,9 +102,7 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
                                         fontSize: '16px',
                                         color: '#32325d',
                                         fontFamily: 'Arial, sans-serif',
-                                        '::placeholder': {
-                                            color: '#aab7c4',
-                                        },
+                                        '::placeholder': { color: '#aab7c4' },
                                     },
                                     invalid: {
                                         color: '#fa755a',
@@ -136,20 +122,10 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney isolé
-const IpayMoneyPayment = ({ orderId, orderDetails, onPaymentSuccess, onPaymentError }) => {
-    const [ipaymoneyLoading, setIpaymoneyLoading] = useState(false);
-    const [ipaymoneyError, setIpaymoneyError] = useState(null);
-
-    const handleIpaymoneySuccess = () => {
-        console.log('✅ Paiement IpayMoney réussi');
-        onPaymentSuccess?.();
-    };
-
-    const handleIpaymoneyError = (error) => {
-        console.error('❌ Erreur IpayMoney:', error);
-        setIpaymoneyError(error);
-        onPaymentError?.(error);
+// NOUVEAU : Composant IpayMoney simple avec bouton direct
+const IpayMoneyPayment = ({ orderId, totalPrice }) => {
+    const generateTransactionId = () => {
+        return `TECHSHOP-${orderId}-${Date.now()}`;
     };
 
     return (
@@ -162,25 +138,21 @@ const IpayMoneyPayment = ({ orderId, orderDetails, onPaymentSuccess, onPaymentEr
                 
                 <div className="method-description">
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
-                    <ul className="payment-methods-list">
-                        <li>✅ Carte Visa/Mastercard</li>
-                        <li>✅ Mobile Money</li>
-                        <li>✅ Virements locaux</li>
-                    </ul>
                 </div>
 
-                {ipaymoneyError && (
-                    <div className="error-message ipaymoney-error">
-                        {ipaymoneyError}
-                    </div>
-                )}
-
-                <IpayMoneyButton 
-                    orderId={orderId}
-                    amount={parseFloat(orderDetails.total_price)}
-                    onSuccess={handleIpaymoneySuccess}
-                    onError={handleIpaymoneyError}
-                />
+                {/* BOUTON IPAYMONEY DIRECT SELON DOCUMENTATION */}
+                <button
+                    type="button"
+                    className="ipaymoney-button"
+                    data-amount={Math.round(totalPrice * 100)} // Montant en centimes
+                    data-environement="live"
+                    data-key="pk_639a33d2e4b341c4a8a281a805779c11" // ⚠️ REMPLACEZ PAR VOTRE CLÉ RÉELLE
+                    data-transaction-id={generateTransactionId()}
+                    data-redirect-url={`${window.location.origin}/payment/success/?order_id=${orderId}`}
+                    data-callback-url={`${window.location.origin}/api/ipaymoney/callback/`}
+                >
+                    Payer avec IpayMoney
+                </button>
 
                 <div className="payment-security">
                     <p className="security-note">
@@ -199,7 +171,7 @@ const OrderConfirmation = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [clientSecret, setClientSecret] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState(null); // 'stripe' ou 'ipaymoney'
+    const [paymentMethod, setPaymentMethod] = useState(null);
 
     // Récupération des détails de la commande
     useEffect(() => {
@@ -209,21 +181,10 @@ const OrderConfirmation = () => {
                 setOrderDetails(response.data);
                 if (response.data.status !== 'COMPLETED') {
                     try {
-                        // CORRECTION : Timeout pour Stripe
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 10000);
-                        
-                        const paymentResponse = await api.post(
-                            `api/orders/${id}/create_payment_intent`,
-                            {},
-                            { signal: controller.signal }
-                        );
-                        
-                        clearTimeout(timeoutId);
+                        const paymentResponse = await api.post(`api/orders/${id}/create_payment_intent`);
                         setClientSecret(paymentResponse.data.clientSecret);
                     } catch (err) {
-                        console.warn('Stripe create intent failed or timed out', err);
-                        // Continuer sans Stripe, IpayMoney fonctionnera toujours
+                        console.warn('Stripe non disponible');
                     }
                 }
             } catch (error) {
@@ -236,22 +197,6 @@ const OrderConfirmation = () => {
 
         fetchOrderDetails();
     }, [id]);
-
-    // Recharger les détails après paiement réussi
-    const handlePaymentSuccess = async () => {
-        try {
-            const response = await api.get(`api/orders/${id}/`);
-            setOrderDetails(response.data);
-            setPaymentMethod(null); // Réinitialiser la sélection
-        } catch (error) {
-            console.error('Error refreshing order details:', error);
-        }
-    };
-
-    const handlePaymentError = (errorMsg) => {
-        setError(errorMsg);
-        setPaymentMethod(null); // Réinitialiser en cas d'erreur
-    };
 
     if (loading) return (
         <div className="order-confirmation">
@@ -295,12 +240,10 @@ const OrderConfirmation = () => {
                     <ul className="product-list">
                         {products.map((product, index) => (
                             <li key={index} className="product-item">
-                                {/* CORRECTION : Utilisation de SafeImage */}
                                 <SafeImage 
                                     src={product.image} 
                                     alt={product.name} 
                                     className='product-image'
-                                    fallback='/images/default-product.png'
                                 />
                                 <div className='product-details'>
                                     <h4>{product.name}</h4>
@@ -325,7 +268,7 @@ const OrderConfirmation = () => {
                 </div>
             </div>
 
-            {/* SECTION PAIEMENT - CHOIX ENTRE STRIPE ET IPAYMONEY */}
+            {/* SECTION PAIEMENT */}
             {status !== "COMPLETED" && (
                 <div className="payment-section">
                     <div className="payment-header">
@@ -334,10 +277,8 @@ const OrderConfirmation = () => {
                     </div>
 
                     {!paymentMethod ? (
-                        // Étape 1 : Choix de la méthode de paiement
                         <div className="payment-methods-selection">
                             <div className="methods-grid">
-                                {/* Option Stripe */}
                                 <div 
                                     className="payment-option-card"
                                     onClick={() => setPaymentMethod('stripe')}
@@ -354,7 +295,6 @@ const OrderConfirmation = () => {
                                     </button>
                                 </div>
 
-                                {/* Option IpayMoney */}
                                 <div 
                                     className="payment-option-card"
                                     onClick={() => setPaymentMethod('ipaymoney')}
@@ -373,7 +313,6 @@ const OrderConfirmation = () => {
                             </div>
                         </div>
                     ) : (
-                        // Étape 2 : Formulaire de paiement selon la méthode choisie
                         <div className="selected-payment-method">
                             <div className="method-header-with-back">
                                 <button 
@@ -387,7 +326,6 @@ const OrderConfirmation = () => {
                                 </h3>
                             </div>
 
-                            {/* Stripe Payment */}
                             {paymentMethod === 'stripe' && clientSecret && (
                                 <Elements stripe={stripePromise}>
                                     <PaymentForm 
@@ -398,19 +336,10 @@ const OrderConfirmation = () => {
                                 </Elements>
                             )}
 
-                            {paymentMethod === 'stripe' && !clientSecret && (
-                                <div className="error-message">
-                                    Stripe n'est pas disponible pour le moment. Veuillez choisir IpayMoney.
-                                </div>
-                            )}
-
-                            {/* IpayMoney Payment */}
                             {paymentMethod === 'ipaymoney' && (
                                 <IpayMoneyPayment
                                     orderId={id}
-                                    orderDetails={orderDetails}
-                                    onPaymentSuccess={handlePaymentSuccess}
-                                    onPaymentError={handlePaymentError}
+                                    totalPrice={parseFloat(total_price)}
                                 />
                             )}
                         </div>
@@ -418,13 +347,11 @@ const OrderConfirmation = () => {
                 </div>
             )}
 
-            {/* Message de confirmation si déjà payé */}
             {status === "COMPLETED" && (
                 <div className="payment-completed">
                     <div className="success-message">
                         <h3>✅ Paiement confirmé !</h3>
                         <p>Votre commande a été payée avec succès. Merci pour votre achat !</p>
-                        <p>Vous recevrez un email de confirmation sous peu.</p>
                     </div>
                 </div>
             )}
