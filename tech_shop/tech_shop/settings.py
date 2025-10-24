@@ -43,7 +43,7 @@ SECRET_KEY = config("DJANGO_SECRET_KEY")
 
 # DEBUG: Mode débogage - affiche les erreurs détaillées
 # ⚠️  EN PRODUCTION: Doit être mis à False
-DEBUG = True
+DEBUG = False
 
 # ALLOWED_HOSTS: Domaines autorisés à servir l'application
 # ⚠️  EN PRODUCTION: Remplacer "*" par les domaines spécifiques
