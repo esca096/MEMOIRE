@@ -32,7 +32,21 @@ import IpayMoneyButton from './IpayMoneyButton';
 const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY
 const stripePromise = loadStripe(STRIPE_PUB_KEY)
 
-// Composant de formulaire de paiement Stripe (EXISTANT - inchangé)
+// Composant SafeImage pour gérer les images manquantes
+const SafeImage = ({ src, alt, className, fallback = '/default-product.png' }) => {
+    const [imgSrc, setImgSrc] = useState(src);
+
+    return (
+        <img 
+            src={imgSrc} 
+            alt={alt} 
+            className={className}
+            onError={() => setImgSrc(fallback)}
+        />
+    );
+};
+
+// Composant de formulaire de paiement Stripe CORRIGÉ
 const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     const stripe = useStripe();
     const elements = useElements();
@@ -91,40 +105,38 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
                 <h3 className='success-message'>Paiement réussi! Votre commande est confirmée.</h3>
             ) : (
                 <form onSubmit={handleSubmit} className='payment-form__form'>
-                    <CardElement 
-                        className="card-element"
-                        options={{
-                            style: {
-                                base: {
-                                    fontSize: '16px',
-                                    color: '#32325d',
-                                    fontFamily: 'Arial, sans-serif',
-                                    '::placeholder': {
-                                        color: '#aab7c4',
+                    {/* CORRECTION : Options Stripe simplifiées sans propriétés CSS interdites */}
+                    <div className="stripe-element-container">
+                        <CardElement 
+                            options={{
+                                style: {
+                                    base: {
+                                        fontSize: '16px',
+                                        color: '#32325d',
+                                        fontFamily: 'Arial, sans-serif',
+                                        '::placeholder': {
+                                            color: '#aab7c4',
+                                        },
                                     },
-                                    padding: '10px',
-                                    border: '1px solid #aab7c4',
-                                    borderRadius: '4px',
-                                    transition: 'border-color 0.3s ease',
+                                    invalid: {
+                                        color: '#fa755a',
+                                        iconColor: '#fa755a',
                                     },
-                                invalid: {
-                                    color: '#fa755a',
-                                    iconColor: '#fa755a',
                                 },
-                            },
-                        }}  
-                    />
+                            }}  
+                        />
+                    </div>
                     <button type="submit" disabled={!stripe || loading} className="submit-button">
-                        {loading ? 'Processing...' : 'Pay with Stripe'}
-                        {error && <p className='error-message'>{error}</p>}
+                        {loading ? 'Traitement...' : 'Payer avec Stripe'}
                     </button>
+                    {error && <p className='error-message'>{error}</p>}
                 </form>
             )}
         </div>
     );
 };
 
-// NOUVEAU : Composant IpayMoney isolé
+// Composant IpayMoney isolé
 const IpayMoneyPayment = ({ orderId, orderDetails, onPaymentSuccess, onPaymentError }) => {
     const [ipaymoneyLoading, setIpaymoneyLoading] = useState(false);
     const [ipaymoneyError, setIpaymoneyError] = useState(null);
@@ -197,14 +209,25 @@ const OrderConfirmation = () => {
                 setOrderDetails(response.data);
                 if (response.data.status !== 'COMPLETED') {
                     try {
-                        const paymentResponse = await api.post(`api/orders/${id}/create_payment_intent`);
+                        // CORRECTION : Timeout pour Stripe
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 10000);
+                        
+                        const paymentResponse = await api.post(
+                            `api/orders/${id}/create_payment_intent`,
+                            {},
+                            { signal: controller.signal }
+                        );
+                        
+                        clearTimeout(timeoutId);
                         setClientSecret(paymentResponse.data.clientSecret);
                     } catch (err) {
-                        console.warn('Stripe create intent failed', err);
+                        console.warn('Stripe create intent failed or timed out', err);
+                        // Continuer sans Stripe, IpayMoney fonctionnera toujours
                     }
                 }
             } catch (error) {
-                setError(error.message);
+                setError("Erreur lors du chargement des détails de la commande");
                 console.error("Error fetching order details:", error);
             } finally {
                 setLoading(false);
@@ -272,10 +295,12 @@ const OrderConfirmation = () => {
                     <ul className="product-list">
                         {products.map((product, index) => (
                             <li key={index} className="product-item">
-                                <img 
+                                {/* CORRECTION : Utilisation de SafeImage */}
+                                <SafeImage 
                                     src={product.image} 
                                     alt={product.name} 
                                     className='product-image'
+                                    fallback='/images/default-product.png'
                                 />
                                 <div className='product-details'>
                                     <h4>{product.name}</h4>
@@ -371,6 +396,12 @@ const OrderConfirmation = () => {
                                         clientSecret={clientSecret} 
                                     />
                                 </Elements>
+                            )}
+
+                            {paymentMethod === 'stripe' && !clientSecret && (
+                                <div className="error-message">
+                                    Stripe n'est pas disponible pour le moment. Veuillez choisir IpayMoney.
+                                </div>
                             )}
 
                             {/* IpayMoney Payment */}
