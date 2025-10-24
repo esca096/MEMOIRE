@@ -1,4 +1,4 @@
-/* OrderConfirmation.css - VERSION CORRIGÉE */
+/* OrderConfirmation.css - VERSION COMPLÈTE AVEC IPAYMONEY */
 
 .order-confirmation {
     max-width: 800px;
@@ -53,7 +53,7 @@ h2 {
     flex-grow: 1;
 }
 
-/* CORRECTION : Styles Stripe corrigés */
+/* Styles Stripe */
 .payment-form {
     margin-top: 20px;
 }
@@ -77,7 +77,6 @@ h2 {
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
-/* Styles pour l'élément Stripe lui-même */
 .StripeElement {
     width: 100%;
 }
@@ -123,8 +122,7 @@ h2 {
     border-radius: 4px;
 }
 
-/* ========== NOUVEAUX STYLES POUR LA SÉLECTION DE MÉTHODES ========== */
-
+/* Styles pour la sélection des méthodes */
 .confirmation-header {
     text-align: center;
     margin-bottom: 30px;
@@ -392,49 +390,38 @@ h2 {
     line-height: 1.4;
 }
 
+/* NOUVEAU : Styles pour le bouton IpayMoney direct */
+.ipaymoney-button {
+    background: #28a745 !important;
+    color: white !important;
+    border: none !important;
+    padding: 15px 30px !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    margin: 10px 0 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3) !important;
+    display: block !important;
+    text-align: center !important;
+    text-decoration: none !important;
+}
+
+.ipaymoney-button:hover {
+    background: #218838 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4) !important;
+}
+
+.ipaymoney-button:active {
+    transform: translateY(0) !important;
+}
+
 .ipaymoney-button-container {
     text-align: center;
     margin: 20px 0;
-}
-
-.ipaymoney-custom-btn {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.ipaymoney-custom-btn:hover:not(:disabled) {
-    background: #218838;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-}
-
-.ipaymoney-custom-btn:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.ipaymoney-custom-btn.loading {
-    background: #ffc107;
-    color: #212529;
-}
-
-.sdk-loading-message {
-    font-size: 14px;
-    color: #6c757d;
-    text-align: center;
-    margin-top: 10px;
-    font-style: italic;
 }
 
 .payment-security {
@@ -536,5 +523,69 @@ h2 {
     .product-image {
         margin-right: 0;
         margin-bottom: 10px;
+    }
+    
+    /* Responsive pour IpayMoney */
+    .ipaymoney-button {
+        padding: 12px 20px !important;
+        font-size: 14px !important;
+    }
+    
+    .ipaymoney-payment-container {
+        margin: 0 10px;
+    }
+}
+
+/* Animation pour les transitions */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.payment-option-card,
+.payment-method-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* États de focus pour accessibilité */
+.ipaymoney-button:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.back-button:focus,
+.select-method-btn:focus,
+.submit-button:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
