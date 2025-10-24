@@ -25,6 +25,12 @@
  * INTÉGRATION SIMPLE IPAYMONEY - Bouton direct selon documentation
  */
 
+/**
+ * Fichier: frontend/src/components/OrderConfirmation.jsx
+ * 
+ * VERSION DÉBOGUÉE - Problèmes images résolus + meilleur logging
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -36,15 +42,22 @@ import "../styles/OrderConfirmation.css";
 const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY
 const stripePromise = loadStripe(STRIPE_PUB_KEY)
 
-// Composant SafeImage pour gérer les images manquantes
-const SafeImage = ({ src, alt, className, fallback = '/images/default-product.png' }) => {
+// Composant SafeImage CORRIGÉ
+const SafeImage = ({ src, alt, className }) => {
     const [imgSrc, setImgSrc] = useState(src);
+    
+    const handleError = () => {
+        console.log(`Image non trouvée: ${src}`);
+        // Image par défaut locale
+        setImgSrc('/default-product.png');
+    };
+
     return (
         <img 
             src={imgSrc} 
             alt={alt} 
             className={className}
-            onError={() => setImgSrc(fallback)}
+            onError={handleError}
         />
     );
 };
@@ -122,10 +135,43 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// NOUVEAU : Composant IpayMoney simple avec bouton direct
+// Composant IpayMoney avec DEBUG
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
+    const [debugInfo, setDebugInfo] = useState('');
+
     const generateTransactionId = () => {
         return `TECHSHOP-${orderId}-${Date.now()}`;
+    };
+
+    const handleIpayMoneyClick = () => {
+        console.log('🎯 Clic sur bouton IpayMoney détecté');
+        
+        // Vérifier si le SDK est chargé
+        if (typeof window.ipaymoney === 'undefined') {
+            setDebugInfo('❌ SDK IpayMoney non chargé');
+            console.error('SDK IpayMoney non trouvé');
+            return;
+        }
+
+        const transactionId = generateTransactionId();
+        const currentDomain = window.location.origin;
+        
+        // ⚠️ REMPLACEZ PAR VOTRE VRAIE CLÉ PUBLIQUE
+        const ipaymoneyPublicKey = 'pk_639a33d2e4b341c4a8a281a805779c11'; 
+        
+        console.log('🔧 Configuration IpayMoney:', {
+            orderId,
+            amount: Math.round(totalPrice * 100),
+            transactionId,
+            publicKey: ipaymoneyPublicKey,
+            redirectUrl: `${currentDomain}/payment/success/?order_id=${orderId}`,
+            callbackUrl: `${currentDomain}/api/ipaymoney/callback/`
+        });
+
+        setDebugInfo('✅ Bouton IpayMoney configuré - Vérifiez la console');
+
+        // Le SDK IpayMoney devrait gérer le reste automatiquement
+        // grâce aux data-attributes du bouton
     };
 
     return (
@@ -140,19 +186,34 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
                 </div>
 
-                {/* BOUTON IPAYMONEY DIRECT SELON DOCUMENTATION */}
+                {/* BOUTON IPAYMONEY DIRECT */}
                 <button
                     type="button"
                     className="ipaymoney-button"
-                    data-amount={Math.round(totalPrice * 100)} // Montant en centimes
+                    data-amount={Math.round(totalPrice * 100)}
                     data-environement="live"
-                    data-key="pk_639a33d2e4b341c4a8a281a805779c11" // ⚠️ REMPLACEZ PAR VOTRE CLÉ RÉELLE
+                    data-key="pk_639a33d2e4b341c4a8a281a805779c11" // ⚠️ REMPLACEZ!
                     data-transaction-id={generateTransactionId()}
                     data-redirect-url={`${window.location.origin}/payment/success/?order_id=${orderId}`}
                     data-callback-url={`${window.location.origin}/api/ipaymoney/callback/`}
+                    onClick={handleIpayMoneyClick}
                 >
                     Payer avec IpayMoney
                 </button>
+
+                {/* DEBUG INFO */}
+                <div style={{ 
+                    marginTop: '10px', 
+                    padding: '10px', 
+                    background: '#f8f9fa', 
+                    borderRadius: '5px',
+                    fontSize: '12px',
+                    color: '#666'
+                }}>
+                    <strong>Debug:</strong> {debugInfo || 'En attente...'}
+                    <br/>
+                    SDK chargé: {typeof window.ipaymoney !== 'undefined' ? '✅' : '❌'}
+                </div>
 
                 <div className="payment-security">
                     <p className="security-note">
@@ -164,7 +225,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     );
 };
 
-// Composant principal de confirmation de commande
+// Composant principal
 const OrderConfirmation = () => {
     const {id} = useParams();
     const [orderDetails, setOrderDetails] = useState(null);
@@ -184,7 +245,7 @@ const OrderConfirmation = () => {
                         const paymentResponse = await api.post(`api/orders/${id}/create_payment_intent`);
                         setClientSecret(paymentResponse.data.clientSecret);
                     } catch (err) {
-                        console.warn('Stripe non disponible');
+                        console.log('Stripe non disponible - IpayMoney sera utilisé');
                     }
                 }
             } catch (error) {
