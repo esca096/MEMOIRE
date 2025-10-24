@@ -1,9 +1,7 @@
-/* OrderConfirmation.css */
-
-/* OrderConfirmation.css */
+/* OrderConfirmation.css - VERSION CORRIGÉE */
 
 .order-confirmation {
-    max-width: 800px; /* Augmenté pour accommoder les deux colonnes */
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f9f9f9;
@@ -55,6 +53,7 @@ h2 {
     flex-grow: 1;
 }
 
+/* CORRECTION : Styles Stripe corrigés */
 .payment-form {
     margin-top: 20px;
 }
@@ -64,19 +63,23 @@ h2 {
     flex-direction: column;
 }
 
-.card-element {
+.stripe-element-container {
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
     margin-bottom: 15px;
-    font-size: 16px;
     background: white;
+    transition: border-color 0.3s ease;
 }
 
-.card-element:focus {
+.stripe-element-container:focus-within {
     border-color: #4CAF50;
-    outline: none;
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Styles pour l'élément Stripe lui-même */
+.StripeElement {
+    width: 100%;
 }
 
 .submit-button {
