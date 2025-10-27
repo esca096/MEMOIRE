@@ -238,9 +238,7 @@ SOCIALACCOUNT_STORE_TOKENS = True  # Stockage des tokens OAuth
 # Clé secrète Stripe récupérée depuis les variables d'environnement
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY")
 
-# Ajoutez ces variables dans settings.py pour ipaymony
-IPAYMONEY_PUBLIC_KEY = config("IPAYMONEY_PUBLIC_KEY")
-IPAYMONEY_SECRET_KEY = config("IPAYMONEY_SECRET_KEY")
+
 
 GDAL_LIBRARY_PATH = 'C:/Program Files/GDAL/gdal.dll'
 
