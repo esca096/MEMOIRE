@@ -9,8 +9,6 @@ from django.conf import settings
 
 from rest_framework.routers import DefaultRouter
 
-# pour ipaymoney
-from api.views_ipaymoney import ipaymoney_callback, ipaymoney_redirect, get_ipaymoney_config
 
 from django.conf.urls.static import static
 from django.views.static import serve 
@@ -104,13 +102,6 @@ urlpatterns = [
     # et /reviews/{id}/ (GET, PUT, PATCH, DELETE)
     path('', include(router.urls)),
 
-
-    # -------------------------------------------------------------------------
-    # PAIEMENTS IPAYMONEY
-    # -------------------------------------------------------------------------
-    path('api/ipaymoney/callback/', ipaymoney_callback, name='ipaymoney_callback'),
-    path('payment/success/', ipaymoney_redirect, name='ipaymoney_redirect'),
-    path('api/ipaymoney/config/', get_ipaymoney_config, name='ipaymoney_config'),
 ]
 
 # =============================================================================
