@@ -11,6 +11,7 @@ Description (FR):
     - Avis (Review) : création et consultation des avis sur les produits
     - Recommandations : heuristiques simples (`ProductRecommendations`) et TF-IDF (`TFIDFRecommendations`)
     - Endpoints de paiement Stripe (create_payment_intent, mark_order_paid)
+    - Endpoints de paiement IpayMoney (ipaymoney_callback, verify_ipaymoney_payment)
 
 Comment ces fichiers se connectent :
 - Utilise les serializers définis dans `api/serialzers.py` pour valider et renvoyer les données.
@@ -36,6 +37,7 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 import json
 import stripe
+import requests
 from django.conf import settings
 
 from rest_framework.decorators import action
@@ -393,89 +395,163 @@ def validate_google_token(request):
             return JsonResponse({'detail': 'Invalid JSON.'}, status=400)
     return JsonResponse({'detail': 'Method not allowed.'}, status=405)
 
-
-
 # =============================================================================
-# PAIEMENTS IPAYMONEY
+# PAIEMENTS IPAYMONEY - VERSION CORRECTE AVEC API
 # =============================================================================
+def call_ipaymoney_api_to_verify(reference):
+    """
+    Vérifie le statut d'une transaction auprès de l'API IpayMoney
+    """
+    try:
+        api_url = f"https://i-pay.money/api/v1/payments/{reference}"
+        
+        headers = {
+            'Authorization': f'Bearer {settings.IPAYMONEY_SECRET_KEY}',
+            'Content-Type': 'application/json',
+            'Ipay-Payment-Type': 'card',  # ou 'mobile' selon le type
+            'Ipay-Target-Environment': 'live'  # 'sandbox' pour les tests
+        }
+        
+        print(f"🔍 Appel API IpayMoney: {api_url}")
+        
+        response = requests.get(api_url, headers=headers, timeout=10)
+        
+        print(f"📡 Réponse API IpayMoney: Status {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"📋 Données API IpayMoney: {data}")
+            return data.get('status')  # 'succeeded', 'failed', etc.
+        else:
+            print(f"❌ Erreur API IpayMoney: {response.status_code} - {response.text}")
+            return None
+            
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erreur connexion API IpayMoney: {str(e)}")
+        return None
+
 @csrf_exempt
 def ipaymoney_callback(request):
     """
-    Webhook IpayMoney pour recevoir les statuts de paiement
-    Format attendu selon documentation IpayMoney
+    Webhook IpayMoney AVEC VÉRIFICATION API - VERSION SÉCURISÉE
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
     try:
         data = json.loads(request.body)
-        print("📥 Callback IpayMoney reçu:", data)
+        print("📥 Webhook IpayMoney reçu:", data)
         
         # Extraction des données selon format IpayMoney
         transaction_id = data.get('transaction_id')
-        status = data.get('status')
-        order_id = data.get('order_id')  # Doit être inclus dans data-transaction-id
+        reference = data.get('reference')  # Référence IpayMoney
+        webhook_status = data.get('status')
+        amount = data.get('amount')
         
-        if not transaction_id or not status:
-            return JsonResponse({'error': 'Données manquantes'}, status=400)
+        if not transaction_id:
+            return JsonResponse({'error': 'Transaction ID manquant'}, status=400)
         
-        # Trouver la commande - le order_id est inclus dans le transaction_id
-        # Format: "TECHSHOP-{order_id}-{timestamp}"
-        if order_id:
-            try:
+        # Extraction order_id depuis transaction_id (format: "TECHSHOP-{order_id}-{timestamp}")
+        try:
+            transaction_parts = transaction_id.split('-')
+            if len(transaction_parts) >= 2 and transaction_parts[0] == 'TECHSHOP':
+                order_id = transaction_parts[1]
                 order = Order.objects.get(id=order_id)
-            except Order.DoesNotExist:
-                return JsonResponse({'error': 'Commande non trouvée'}, status=404)
-        else:
-            # Fallback: extraire order_id du transaction_id
-            try:
-                order_id_from_transaction = transaction_id.split('-')[1]
-                order = Order.objects.get(id=order_id_from_transaction)
-            except (IndexError, Order.DoesNotExist):
-                return JsonResponse({'error': 'Commande non trouvable'}, status=404)
+            else:
+                return JsonResponse({'error': 'Transaction ID invalide'}, status=400)
+        except (IndexError, Order.DoesNotExist):
+            return JsonResponse({'error': 'Commande non trouvée'}, status=404)
         
-        # Traitement selon le statut
-        if status.upper() in ['SUCCESS', 'COMPLETED', 'PAID']:
+        # 🛑 VÉRIFICATION CRITIQUE AUPRÈS DE L'API IPAYMONEY
+        if reference:
+            print(f"🔍 Vérification transaction {reference} auprès de l'API IpayMoney...")
+            api_status = call_ipaymoney_api_to_verify(reference)
+            
+            if api_status:
+                # On utilise le statut de l'API (source de vérité)
+                final_status = api_status
+                print(f"✅ Statut confirmé par API IpayMoney: {api_status}")
+            else:
+                # Fallback sur le statut du webhook si API échoue
+                final_status = webhook_status
+                print(f"⚠️ Utilisation du statut webhook: {webhook_status}")
+        else:
+            final_status = webhook_status
+            print(f"ℹ️ Pas de référence, utilisation du statut webhook: {webhook_status}")
+        
+        # Traitement basé sur le statut final
+        if final_status.lower() in ['succeeded', 'success', 'completed', 'paid']:
+            # Vérification du montant (sécurité)
+            expected_amount = int(order.total_price * 100)  # Montant en centimes
+            received_amount = int(amount) if amount else 0
+            
+            if received_amount and received_amount != expected_amount:
+                print(f"⚠️ Montant incorrect: reçu {received_amount}, attendu {expected_amount}")
+                return JsonResponse({'error': 'Montant incorrect'}, status=400)
+            
+            # TOUT EST VALIDE - Marquer comme payé
             order.status = 'COMPLETED'
             order.payment_completed = True
-            order.payement_id = transaction_id
+            order.payement_id = reference or transaction_id
             order.save()
-            print(f"✅ Commande {order.id} marquée comme payée via IpayMoney")
+            print(f"✅ Commande {order.id} CONFIRMÉE via IpayMoney")
             
-        elif status.upper() in ['FAILED', 'CANCELLED', 'ERROR']:
+        elif final_status.lower() in ['failed', 'cancelled', 'error']:
             order.status = 'CANCELLED'
             order.save()
-            print(f"❌ Commande {order.id} annulée via IpayMoney")
+            print(f"❌ Commande {order.id} annulée (statut: {final_status})")
+            
+        else:
+            print(f"⚠️ Statut inconnu: {final_status} - Commande {order.id} non traitée")
+            return JsonResponse({'error': f'Statut inconnu: {final_status}'}, status=400)
         
-        return JsonResponse({'success': True, 'message': 'Statut mis à jour'})
+        return JsonResponse({
+            'success': True, 
+            'message': 'Webhook traité avec succès',
+            'order_id': order.id,
+            'status': order.status,
+            'ipaymoney_status': final_status
+        })
         
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
     except Exception as e:
-        print("❌ Erreur callback IpayMoney:", str(e))
+        print(f"❌ Erreur webhook IpayMoney: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
 def verify_ipaymoney_payment(request, order_id):
     """
     Vérification manuelle d'un paiement IpayMoney
-    (Utilisé si le callback échoue)
     """
     try:
         order = Order.objects.get(id=order_id)
         
-        # Ici vous devriez appeler l'API IpayMoney pour vérifier le statut
-        # Pour l'instant, on suppose que le callback a fonctionné
-        
         if order.payment_completed:
             return JsonResponse({
                 'status': 'completed',
-                'message': 'Paiement confirmé',
+                'message': 'Paiement déjà confirmé',
                 'payment_id': order.payement_id
             })
-        else:
-            return JsonResponse({
-                'status': 'pending', 
-                'message': 'Paiement en attente'
-            })
+        
+        # Si pas encore confirmé et on a une référence IpayMoney
+        if order.payement_id and order.payement_id.startswith('ipay_'):
+            ipaymoney_status = call_ipaymoney_api_to_verify(order.payement_id)
+            
+            if ipaymoney_status and ipaymoney_status.lower() in ['succeeded', 'success']:
+                order.status = 'COMPLETED'
+                order.payment_completed = True
+                order.save()
+                return JsonResponse({
+                    'status': 'completed',
+                    'message': 'Paiement confirmé après vérification API',
+                    'payment_id': order.payement_id
+                })
+        
+        return JsonResponse({
+            'status': 'pending', 
+            'message': 'Paiement en attente de confirmation'
+        })
             
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Commande non trouvée'}, status=404)
