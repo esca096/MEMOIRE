@@ -36,6 +36,17 @@
  * 
  * INTÉGRATION IPAYMONEY COMPLÈTE SANS DEBUG
  */
+/**
+ * Fichier: frontend/src/components/OrderConfirmation.jsx
+ * 
+ * INTÉGRATION IPAYMONEY COMPLÈTE - URLs CORRIGÉES
+ */
+
+/**
+ * Fichier: frontend/src/components/OrderConfirmation.jsx
+ * 
+ * INTÉGRATION IPAYMONEY COMPLÈTE - ENVIRONNEMENT LIVE
+ */
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
@@ -140,7 +151,7 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION CORRIGÉE
+// Composant IpayMoney - VERSION LIVE
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
 
@@ -172,7 +183,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         if (paymentStatus === 'processing') {
             const checkInterval = setInterval(async () => {
                 try {
-                    const response = await api.get(`api/orders/${orderId}/verify_ipaymoney/`);
+                    const response = await api.get(`https://memoire-backend-4rx4.onrender.com/api/orders/${orderId}/verify_ipaymoney/`);
                     if (response.data.status === 'completed') {
                         setPaymentStatus('success');
                         clearInterval(checkInterval);
@@ -186,8 +197,8 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         }
     }, [paymentStatus, orderId]);
 
-    // Clé publique - REMPLACEZ PAR VOTRE VRAIE CLÉ
-    const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY || 'pk_639a33d2e4b341c4a8a281a805779c11';
+    // Clé publique LIVE - REMPLACEZ PAR VOTRE VRAIE CLÉ LIVE
+    const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY;
 
     if (paymentStatus === 'success') {
         return (
@@ -210,21 +221,26 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 
                 <div className="method-description">
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
+                    <ul className="payment-methods-list">
+                        <li>💳 Cartes Visa, Mastercard</li>
+                        <li>📱 Mobile Money (Orange Money, MTN Money, etc.)</li>
+                        <li>🏦 Virements bancaires</li>
+                    </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY AVEC GESTION D'ERREUR */}
+                {/* BOUTON IPAYMONEY - ENVIRONNEMENT LIVE */}
                 <div className="ipaymoney-button-container">
                     <button
                         type="button"
                         className="ipaymoney-button"
                         data-amount={Math.round(totalPrice * 100)}
-                        data-environement="live" // Changez en "live" en production
+                        data-environement="live"
                         data-key={ipaymoneyPublicKey}
                         data-transaction-id={generateTransactionId()}
-                        data-redirect-url={`${window.location.origin}/order-confirmation/${orderId}`}
-                        data-callback-url={`${window.location.origin}/api/ipaymoney/callback/`}
+                        data-redirect-url={`https://memoire-hazel.vercel.app/order-confirmation/`}
+                        data-callback-url={`https://memoire-backend-4rx4.onrender.com/api/ipaymoney/callback/`}
                         onClick={() => {
-                            console.log('🔄 Démarrage paiement IpayMoney...');
+                            console.log('🔄 Démarrage paiement IpayMoney LIVE...');
                             setPaymentStatus('processing');
                             
                             // Vérification finale
@@ -250,7 +266,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
 
                 <div className="payment-security">
                     <p className="security-note">
-                        🔒 Transaction sécurisée par IpayMoney
+                        🔒 Transaction sécurisée par IpayMoney - Environnement LIVE
                     </p>
                 </div>
             </div>
