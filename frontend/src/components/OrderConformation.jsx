@@ -31,6 +31,12 @@
  * VERSION DÉBOGUÉE - Problèmes images résolus + meilleur logging
  */
 
+/**
+ * Fichier: frontend/src/components/OrderConfirmation.jsx
+ * 
+ * INTÉGRATION IPAYMONEY COMPLÈTE SANS DEBUG
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -39,16 +45,15 @@ import api from '../api';
 import "../styles/OrderConfirmation.css";
 
 // Chargement de la clé publique Stripe
-const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY
-const stripePromise = loadStripe(STRIPE_PUB_KEY)
+const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY;
+const stripePromise = loadStripe(STRIPE_PUB_KEY);
 
-// Composant SafeImage CORRIGÉ
+// Composant SafeImage
 const SafeImage = ({ src, alt, className }) => {
     const [imgSrc, setImgSrc] = useState(src);
     
     const handleError = () => {
         console.log(`Image non trouvée: ${src}`);
-        // Image par défaut locale
         setImgSrc('/default-product.png');
     };
 
@@ -135,44 +140,48 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney avec DEBUG
+// Composant IpayMoney - INTÉGRATION DIRECTE SANS DEBUG
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
-    const [debugInfo, setDebugInfo] = useState('');
+    const [paymentStatus, setPaymentStatus] = useState('idle'); // idle, processing, success, error
 
+    // Génération d'un ID de transaction unique selon le format recommandé
     const generateTransactionId = () => {
-        return `TECHSHOP-${orderId}-${Date.now()}`;
+        const timestamp = Date.now();
+        return `TECHSHOP-${orderId}-${timestamp}`;
     };
 
-    const handleIpayMoneyClick = () => {
-        console.log('🎯 Clic sur bouton IpayMoney détecté');
-        
-        // Vérifier si le SDK est chargé
-        if (typeof window.ipaymoney === 'undefined') {
-            setDebugInfo('❌ SDK IpayMoney non chargé');
-            console.error('SDK IpayMoney non trouvé');
-            return;
+    // Vérification périodique du statut du paiement
+    useEffect(() => {
+        if (paymentStatus === 'processing') {
+            const checkInterval = setInterval(async () => {
+                try {
+                    const response = await api.get(`api/orders/${orderId}/verify_ipaymoney/`);
+                    if (response.data.status === 'completed') {
+                        setPaymentStatus('success');
+                        clearInterval(checkInterval);
+                    }
+                } catch (error) {
+                    console.log('Erreur vérification paiement:', error);
+                }
+            }, 5000); // Vérifier toutes les 5 secondes
+
+            return () => clearInterval(checkInterval);
         }
+    }, [paymentStatus, orderId]);
 
-        const transactionId = generateTransactionId();
-        const currentDomain = window.location.origin;
-        
-        // ⚠️ REMPLACEZ PAR VOTRE VRAIE CLÉ PUBLIQUE
-        const ipaymoneyPublicKey = 'pk_639a33d2e4b341c4a8a281a805779c11'; 
-        
-        console.log('🔧 Configuration IpayMoney:', {
-            orderId,
-            amount: Math.round(totalPrice * 100),
-            transactionId,
-            publicKey: ipaymoneyPublicKey,
-            redirectUrl: `${currentDomain}/payment/success/?order_id=${orderId}`,
-            callbackUrl: `${currentDomain}/api/ipaymoney/callback/`
-        });
+    // Récupération de la clé publique depuis les variables d'environnement
+    const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY || 'pk_639a33d2e4b341c4a8a281a805779c11';
 
-        setDebugInfo('✅ Bouton IpayMoney configuré - Vérifiez la console');
-
-        // Le SDK IpayMoney devrait gérer le reste automatiquement
-        // grâce aux data-attributes du bouton
-    };
+    if (paymentStatus === 'success') {
+        return (
+            <div className="ipaymoney-payment-container">
+                <div className="success-message">
+                    <h3>✅ Paiement IpayMoney réussi !</h3>
+                    <p>Votre commande a été confirmée. Redirection en cours...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="ipaymoney-payment-container">
@@ -184,40 +193,43 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 
                 <div className="method-description">
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
+                    <ul className="payment-methods-list">
+                        <li>💳 Cartes Visa, Mastercard</li>
+                        <li>📱 Mobile Money (Orange Money, MTN Money, etc.)</li>
+                        <li>🏦 Virements bancaires</li>
+                    </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY DIRECT */}
-                <button
-                    type="button"
-                    className="ipaymoney-button"
-                    data-amount={Math.round(totalPrice * 100)}
-                    data-environement="live"
-                    data-key="pk_639a33d2e4b341c4a8a281a805779c11" // ⚠️ REMPLACEZ!
-                    data-transaction-id={generateTransactionId()}
-                    data-redirect-url={`${window.location.origin}/payment/success/?order_id=${orderId}`}
-                    data-callback-url={`${window.location.origin}/api/ipaymoney/callback/`}
-                    onClick={handleIpayMoneyClick}
-                >
-                    Payer avec IpayMoney
-                </button>
-
-                {/* DEBUG INFO */}
-                <div style={{ 
-                    marginTop: '10px', 
-                    padding: '10px', 
-                    background: '#f8f9fa', 
-                    borderRadius: '5px',
-                    fontSize: '12px',
-                    color: '#666'
-                }}>
-                    <strong>Debug:</strong> {debugInfo || 'En attente...'}
-                    <br/>
-                    SDK chargé: {typeof window.ipaymoney !== 'undefined' ? '✅' : '❌'}
+                {/* BOUTON IPAYMONEY DIRECT - CONFORME À LA DOCUMENTATION */}
+                <div className="ipaymoney-button-container">
+                    <button
+                        type="button"
+                        className="ipaymoney-button"
+                        data-amount={Math.round(totalPrice * 100)} // Montant en centimes
+                        data-environement="live"
+                        data-key={ipaymoneyPublicKey}
+                        data-transaction-id={generateTransactionId()}
+                        data-redirect-url={`${window.location.origin}/payment/success/?order_id=${orderId}&payment_method=ipaymoney`}
+                        data-callback-url={`${window.location.origin}/api/ipaymoney/callback/`}
+                        disabled={paymentStatus === 'processing'}
+                    >
+                        {paymentStatus === 'processing' ? 'Paiement en cours...' : `Payer ${totalPrice} XOF`}
+                    </button>
                 </div>
+
+                {/* Indicateur de statut */}
+                {paymentStatus === 'processing' && (
+                    <div className="payment-status">
+                        <p>🔄 Paiement en cours de traitement...</p>
+                        <p className="status-note">
+                            Ne quittez pas cette page pendant le traitement.
+                        </p>
+                    </div>
+                )}
 
                 <div className="payment-security">
                     <p className="security-note">
-                        🔒 Transaction 100% sécurisée par IpayMoney
+                        🔒 Transaction 100% sécurisée par IpayMoney - Certifié PCI DSS
                     </p>
                 </div>
             </div>
@@ -225,7 +237,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     );
 };
 
-// Composant principal
+// Composant principal OrderConfirmation
 const OrderConfirmation = () => {
     const {id} = useParams();
     const [orderDetails, setOrderDetails] = useState(null);
