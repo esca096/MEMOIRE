@@ -102,6 +102,12 @@ urlpatterns = [
     # et /reviews/{id}/ (GET, PUT, PATCH, DELETE)
     path('', include(router.urls)),
 
+    # =============================================================================
+    # PAIEMENTS IPAYMONEY
+    # =============================================================================
+    path('api/ipaymoney/callback/', ipaymoney_callback, name='ipaymoney_callback'),
+    path('api/orders/<int:order_id>/verify_ipaymoney/', verify_ipaymoney_payment, name='verify_ipaymoney'),
+
 ]
 
 # =============================================================================
