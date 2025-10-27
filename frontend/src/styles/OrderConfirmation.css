@@ -1,5 +1,7 @@
 /* OrderConfirmation.css - VERSION COMPLÈTE AVEC IPAYMONEY */
 
+/* OrderConfirmation.css - VERSION COMPLÈTE AVEC IPAYMONEY */
+
 .order-confirmation {
     max-width: 800px;
     margin: 0 auto;
@@ -390,7 +392,7 @@ h2 {
     line-height: 1.4;
 }
 
-/* NOUVEAU : Styles pour le bouton IpayMoney direct */
+/* Styles pour le bouton IpayMoney direct */
 .ipaymoney-button {
     background: #28a745 !important;
     color: white !important;
@@ -419,9 +421,35 @@ h2 {
     transform: translateY(0) !important;
 }
 
+.ipaymoney-button:disabled {
+    background: #6c757d !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 .ipaymoney-button-container {
     text-align: center;
     margin: 20px 0;
+}
+
+.payment-status {
+    text-align: center;
+    margin: 15px 0;
+    padding: 15px;
+    background: #e7f3ff;
+    border-radius: 6px;
+    border: 1px solid #b3d9ff;
+}
+
+.payment-status p {
+    margin: 5px 0;
+    color: #0066cc;
+}
+
+.status-note {
+    font-size: 12px;
+    color: #666;
 }
 
 .payment-security {
@@ -435,16 +463,6 @@ h2 {
     font-size: 12px;
     color: #6c757d;
     margin: 0;
-}
-
-.ipaymoney-error {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 12px;
-    border-radius: 6px;
-    margin: 15px 0;
-    border: 1px solid #f5c6cb;
-    text-align: center;
 }
 
 /* États de chargement et erreurs */
@@ -565,25 +583,6 @@ h2 {
     outline: 2px solid #007bff;
     outline-offset: 2px;
 }
-
-/* Loading states */
-.loading {
-    opacity: 0.7;
-    pointer-events: none;
-}
-
-.loading::after {
-    content: '';
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 1s linear infinite;
-    margin-left: 8px;
-}
-
 @keyframes spin {
     to {
         transform: rotate(360deg);
