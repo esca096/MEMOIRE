@@ -392,3 +392,90 @@ def validate_google_token(request):
         except json.JSONDecodeError:
             return JsonResponse({'detail': 'Invalid JSON.'}, status=400)
     return JsonResponse({'detail': 'Method not allowed.'}, status=405)
+
+
+
+# =============================================================================
+# PAIEMENTS IPAYMONEY
+# =============================================================================
+@csrf_exempt
+def ipaymoney_callback(request):
+    """
+    Webhook IpayMoney pour recevoir les statuts de paiement
+    Format attendu selon documentation IpayMoney
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        print("📥 Callback IpayMoney reçu:", data)
+        
+        # Extraction des données selon format IpayMoney
+        transaction_id = data.get('transaction_id')
+        status = data.get('status')
+        order_id = data.get('order_id')  # Doit être inclus dans data-transaction-id
+        
+        if not transaction_id or not status:
+            return JsonResponse({'error': 'Données manquantes'}, status=400)
+        
+        # Trouver la commande - le order_id est inclus dans le transaction_id
+        # Format: "TECHSHOP-{order_id}-{timestamp}"
+        if order_id:
+            try:
+                order = Order.objects.get(id=order_id)
+            except Order.DoesNotExist:
+                return JsonResponse({'error': 'Commande non trouvée'}, status=404)
+        else:
+            # Fallback: extraire order_id du transaction_id
+            try:
+                order_id_from_transaction = transaction_id.split('-')[1]
+                order = Order.objects.get(id=order_id_from_transaction)
+            except (IndexError, Order.DoesNotExist):
+                return JsonResponse({'error': 'Commande non trouvable'}, status=404)
+        
+        # Traitement selon le statut
+        if status.upper() in ['SUCCESS', 'COMPLETED', 'PAID']:
+            order.status = 'COMPLETED'
+            order.payment_completed = True
+            order.payement_id = transaction_id
+            order.save()
+            print(f"✅ Commande {order.id} marquée comme payée via IpayMoney")
+            
+        elif status.upper() in ['FAILED', 'CANCELLED', 'ERROR']:
+            order.status = 'CANCELLED'
+            order.save()
+            print(f"❌ Commande {order.id} annulée via IpayMoney")
+        
+        return JsonResponse({'success': True, 'message': 'Statut mis à jour'})
+        
+    except Exception as e:
+        print("❌ Erreur callback IpayMoney:", str(e))
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def verify_ipaymoney_payment(request, order_id):
+    """
+    Vérification manuelle d'un paiement IpayMoney
+    (Utilisé si le callback échoue)
+    """
+    try:
+        order = Order.objects.get(id=order_id)
+        
+        # Ici vous devriez appeler l'API IpayMoney pour vérifier le statut
+        # Pour l'instant, on suppose que le callback a fonctionné
+        
+        if order.payment_completed:
+            return JsonResponse({
+                'status': 'completed',
+                'message': 'Paiement confirmé',
+                'payment_id': order.payement_id
+            })
+        else:
+            return JsonResponse({
+                'status': 'pending', 
+                'message': 'Paiement en attente'
+            })
+            
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Commande non trouvée'}, status=404)
