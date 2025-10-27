@@ -140,17 +140,34 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - INTÉGRATION DIRECTE SANS DEBUG
+// Composant IpayMoney - VERSION CORRIGÉE
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
-    const [paymentStatus, setPaymentStatus] = useState('idle'); // idle, processing, success, error
+    const [paymentStatus, setPaymentStatus] = useState('idle');
 
-    // Génération d'un ID de transaction unique selon le format recommandé
+    // Génération d'un ID de transaction unique
     const generateTransactionId = () => {
-        const timestamp = Date.now();
-        return `TECHSHOP-${orderId}-${timestamp}`;
+        return `TECHSHOP-${orderId}-${Date.now()}`;
     };
 
-    // Vérification périodique du statut du paiement
+    // Vérification que le SDK est chargé
+    useEffect(() => {
+        const checkSDK = () => {
+            if (typeof window.ipaymoney === 'undefined') {
+                console.error('❌ SDK IpayMoney non chargé');
+                // Recharger le script si nécessaire
+                const script = document.createElement('script');
+                script.src = 'https://i-pay.money/checkout.js';
+                script.onload = () => console.log('✅ SDK IpayMoney chargé');
+                document.head.appendChild(script);
+            } else {
+                console.log('✅ SDK IpayMoney prêt');
+            }
+        };
+
+        checkSDK();
+    }, []);
+
+    // Vérification du statut du paiement
     useEffect(() => {
         if (paymentStatus === 'processing') {
             const checkInterval = setInterval(async () => {
@@ -163,13 +180,13 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 } catch (error) {
                     console.log('Erreur vérification paiement:', error);
                 }
-            }, 5000); // Vérifier toutes les 5 secondes
+            }, 5000);
 
             return () => clearInterval(checkInterval);
         }
     }, [paymentStatus, orderId]);
 
-    // Récupération de la clé publique depuis les variables d'environnement
+    // Clé publique - REMPLACEZ PAR VOTRE VRAIE CLÉ
     const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY || 'pk_639a33d2e4b341c4a8a281a805779c11';
 
     if (paymentStatus === 'success') {
@@ -177,7 +194,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
             <div className="ipaymoney-payment-container">
                 <div className="success-message">
                     <h3>✅ Paiement IpayMoney réussi !</h3>
-                    <p>Votre commande a été confirmée. Redirection en cours...</p>
+                    <p>Votre commande a été confirmée.</p>
                 </div>
             </div>
         );
@@ -193,43 +210,47 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 
                 <div className="method-description">
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
-                    <ul className="payment-methods-list">
-                        <li>💳 Cartes Visa, Mastercard</li>
-                        <li>📱 Mobile Money (Orange Money, MTN Money, etc.)</li>
-                        <li>🏦 Virements bancaires</li>
-                    </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY DIRECT - CONFORME À LA DOCUMENTATION */}
+                {/* BOUTON IPAYMONEY AVEC GESTION D'ERREUR */}
                 <div className="ipaymoney-button-container">
                     <button
                         type="button"
                         className="ipaymoney-button"
-                        data-amount={Math.round(totalPrice * 100)} // Montant en centimes
-                        data-environement="live"
+                        data-amount={Math.round(totalPrice * 100)}
+                        data-environement="live" // Changez en "live" en production
                         data-key={ipaymoneyPublicKey}
                         data-transaction-id={generateTransactionId()}
-                        data-redirect-url={`${window.location.origin}/payment/success/?order_id=${orderId}&payment_method=ipaymoney`}
+                        data-redirect-url={`${window.location.origin}/order-confirmation/${orderId}`}
                         data-callback-url={`${window.location.origin}/api/ipaymoney/callback/`}
+                        onClick={() => {
+                            console.log('🔄 Démarrage paiement IpayMoney...');
+                            setPaymentStatus('processing');
+                            
+                            // Vérification finale
+                            if (typeof window.ipaymoney === 'undefined') {
+                                alert('SDK IpayMoney non chargé. Rechargez la page.');
+                                return;
+                            }
+                        }}
                         disabled={paymentStatus === 'processing'}
                     >
-                        {paymentStatus === 'processing' ? 'Paiement en cours...' : `Payer ${totalPrice} XOF`}
+                        {paymentStatus === 'processing' ? 'Redirection...' : `Payer ${totalPrice} XOF`}
                     </button>
                 </div>
 
-                {/* Indicateur de statut */}
                 {paymentStatus === 'processing' && (
                     <div className="payment-status">
-                        <p>🔄 Paiement en cours de traitement...</p>
+                        <p>🔄 Redirection vers IpayMoney...</p>
                         <p className="status-note">
-                            Ne quittez pas cette page pendant le traitement.
+                            Si la redirection ne se fait pas automatiquement, vérifiez votre bloqueur de publicités.
                         </p>
                     </div>
                 )}
 
                 <div className="payment-security">
                     <p className="security-note">
-                        🔒 Transaction 100% sécurisée par IpayMoney - Certifié PCI DSS
+                        🔒 Transaction sécurisée par IpayMoney
                     </p>
                 </div>
             </div>
