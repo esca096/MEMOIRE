@@ -1,7 +1,5 @@
 /* OrderConfirmation.css - VERSION COMPLÈTE AVEC IPAYMONEY */
 
-/* OrderConfirmation.css - VERSION COMPLÈTE AVEC IPAYMONEY */
-
 .order-confirmation {
     max-width: 800px;
     margin: 0 auto;
@@ -465,6 +463,133 @@ h2 {
     margin: 0;
 }
 
+/* NOUVEAUX STYLES POUR LA GESTION DU SDK IPAYMONEY */
+
+/* Styles pour le statut SDK */
+.sdk-status {
+    font-size: 12px;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.status-success {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.status-warning {
+    color: #eab308;
+    font-weight: bold;
+}
+
+.status-error {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+/* Actions d'erreur */
+.error-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.retry-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.retry-button:hover {
+    background: #0056b3;
+}
+
+.reload-button {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.reload-button:hover {
+    background: #4b5563;
+}
+
+/* Indicateur de chargement SDK */
+.loading-sdk {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    text-align: center;
+    color: #92400e;
+    font-weight: 500;
+}
+
+.loading-sdk::before {
+    content: "⏳ ";
+    margin-right: 5px;
+}
+
+/* Animation de pulsation pour le chargement */
+.pulsating {
+    animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from {
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Amélioration des messages d'erreur */
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.error-message p {
+    margin: 0 0 10px 0;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+/* Style pour le conteneur d'erreur amélioré */
+.error-container {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.error-container .error-message {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 0 15px 0;
+}
+
 /* États de chargement et erreurs */
 .loading-container, .error-container {
     text-align: center;
@@ -552,6 +677,18 @@ h2 {
     .ipaymoney-payment-container {
         margin: 0 10px;
     }
+    
+    /* Responsive pour les actions d'erreur */
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .retry-button,
+    .reload-button {
+        width: 100%;
+        max-width: 200px;
+    }
 }
 
 /* Animation pour les transitions */
@@ -571,6 +708,24 @@ h2 {
     animation: fadeIn 0.5s ease-out;
 }
 
+/* Animation de spin pour les indicateurs de chargement */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
 /* États de focus pour accessibilité */
 .ipaymoney-button:focus {
     outline: 2px solid #007bff;
@@ -579,12 +734,51 @@ h2 {
 
 .back-button:focus,
 .select-method-btn:focus,
-.submit-button:focus {
+.submit-button:focus,
+.retry-button:focus,
+.reload-button:focus {
     outline: 2px solid #007bff;
     outline-offset: 2px;
 }
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+
+/* Amélioration visuelle pour les états désactivés */
+.ipaymoney-button:disabled {
+    position: relative;
+}
+
+.ipaymoney-button:disabled::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Style pour le statut de vérification */
+.verification-status {
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.verification-status p {
+    margin: 0;
+    color: #1e40af;
+    font-size: 14px;
+}
+
+/* Style pour le compteur de vérification */
+.verification-counter {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 5px;
 }
