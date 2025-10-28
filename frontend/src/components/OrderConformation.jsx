@@ -150,12 +150,11 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION CORRECTE
+// Composant IpayMoney - VERSION MANUELLE DÉFINITIVE
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [error, setError] = useState(null);
     const [sdkLoaded, setSdkLoaded] = useState(false);
-    const buttonRef = useRef(null);
 
     // Génération d'un ID de transaction unique
     const generateTransactionId = () => {
@@ -165,24 +164,14 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     // Vérification du chargement du SDK IpayMoney
     useEffect(() => {
         const checkSDK = () => {
-            // Ce SDK ne crée pas d'objet global, on vérifie si le script est chargé
-            // en testant si la fonctionnalité est disponible
             const scriptLoaded = document.querySelector('script[src*="i-pay.money/checkout.js"]');
-            
             if (scriptLoaded) {
                 console.log('✅ Script IpayMoney détecté dans le DOM');
                 setSdkLoaded(true);
-            } else {
-                console.log('❌ Script IpayMoney non trouvé dans le DOM');
-                setSdkLoaded(false);
             }
         };
 
-        // Vérifier après un délai pour laisser le script se charger
-        const timer = setTimeout(() => {
-            checkSDK();
-        }, 1000);
-
+        const timer = setTimeout(checkSDK, 1000);
         return () => clearTimeout(timer);
     }, []);
 
@@ -227,13 +216,151 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY;
     const amountInXOF = Math.round(totalPrice);
 
-    const handleIpayMoneyPayment = () => {
-        console.log('🔄 Démarrage paiement IpayMoney...');
+    const handleIpayMoneyPayment = async () => {
+        console.log('🔄 Démarrage paiement IpayMoney MANUEL...');
         setPaymentStatus('processing');
         setError(null);
 
-        // Le SDK va automatiquement détecter le clic sur le bouton
-        // avec les data-attributs et gérer le paiement
+        try {
+            const transactionId = generateTransactionId();
+            
+            console.log('📦 Données de paiement:', {
+                key: ipaymoneyPublicKey,
+                amount: amountInXOF,
+                transactionId: transactionId
+            });
+
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+
+            const raw = JSON.stringify({
+                key: ipaymoneyPublicKey,
+                amount: amountInXOF,
+                environement: "live",
+                transaction_id: transactionId,
+                parent_domaine: window.location.origin
+            });
+
+            const requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw
+            };
+
+            console.log('🚀 Envoi requête vers IpayMoney...');
+            
+            const response = await fetch('https://i-pay.money/api/sdk/payment_pages/create_payment_token', requestOptions);
+            const data = await response.json();
+            
+            console.log('✅ Réponse IpayMoney:', data);
+            
+            if (!data.token) {
+                throw new Error('Token non reçu de IpayMoney');
+            }
+
+            const token = data.token;
+
+            // CRÉATION MANUELLE DE L'IFRAME DE PAIEMENT
+            const iPayDiv = document.createElement("div");
+            document.body.appendChild(iPayDiv);
+            iPayDiv.className = "ipaymoney-payment-page";
+            iPayDiv.setAttribute("style", `
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100%; 
+                background-color: rgba(0, 0, 0, 0.50); 
+                z-index: 999999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            `);
+
+            const iPayIframeContainer = document.createElement("div");
+            iPayDiv.appendChild(iPayIframeContainer);
+            iPayIframeContainer.setAttribute("style", `
+                position: relative; 
+                width: 90%; 
+                height: 90%; 
+                max-width: 500px;
+                max-height: 700px;
+                background: white;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `);
+
+            // Bouton de fermeture
+            const closeButton = document.createElement("button");
+            closeButton.innerHTML = "×";
+            closeButton.setAttribute("style", `
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                background: transparent;
+                border: none;
+                font-size: 24px;
+                color: #666;
+                cursor: pointer;
+                z-index: 1000000;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `);
+            closeButton.onclick = () => {
+                iPayDiv.remove();
+                setPaymentStatus('idle');
+            };
+            iPayIframeContainer.appendChild(closeButton);
+
+            const iPayIframe = document.createElement("iframe");
+            iPayIframeContainer.appendChild(iPayIframe);
+            iPayIframe.setAttribute("style", `
+                border: 0; 
+                width: 100%; 
+                height: 100%; 
+                display: block;
+                border-radius: 10px;
+            `);
+            
+            const sdkUrl = `https://i-pay.money/api/sdk/payment_pages?token=${token}`;
+            iPayIframe.src = sdkUrl;
+            iPayIframe.id = "i-pay-frame";
+            iPayIframe.allow = "payment";
+
+            console.log('🎯 Iframe de paiement créée avec URL:', sdkUrl);
+
+            // Gérer la fermeture en cliquant sur le fond
+            iPayDiv.addEventListener('click', (e) => {
+                if (e.target === iPayDiv) {
+                    iPayDiv.remove();
+                    setPaymentStatus('idle');
+                }
+            });
+
+            // Écouter les messages de l'iframe
+            window.addEventListener('message', function(message) {
+                console.log('📨 Message reçu de l\'iframe:', message.data);
+                if (message.data.type === "closeModal") {
+                    iPayDiv.remove();
+                    setPaymentStatus('idle');
+                }
+                if (message.data.type === "payment.response") {
+                    console.log('💰 Réponse de paiement:', message.data);
+                    iPayDiv.remove();
+                    // Le polling va détecter le succès
+                }
+            });
+
+        } catch (error) {
+            console.error('❌ Erreur création paiement:', error);
+            setError(`Erreur lors du démarrage du paiement: ${error.message}`);
+            setPaymentStatus('idle');
+        }
     };
 
     if (paymentStatus === 'success') {
@@ -272,12 +399,6 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     </div>
                 )}
                 
-                {!sdkLoaded && (
-                    <div className="loading-sdk">
-                        <p>Chargement du système de paiement...</p>
-                    </div>
-                )}
-                
                 <div className="method-description">
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
                     <ul className="payment-methods-list">
@@ -287,30 +408,23 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY - VERSION CORRECTE */}
+                {/* BOUTON IPAYMONEY MANUEL */}
                 <div className="ipaymoney-button-container">
                     <button
-                        ref={buttonRef}
                         type="button"
                         className="ipaymoney-button"
-                        data-amount={amountInXOF}
-                        data-environement="live"
-                        data-key={ipaymoneyPublicKey}
-                        data-transaction-id={generateTransactionId()}
-                        data-redirect-url={`https://memoire-hazel.vercel.app/order-confirmation/`}
-                        data-callback-url={`https://memoire-backend-4rx4.onrender.com/api/ipaymoney/callback/`}
                         onClick={handleIpayMoneyPayment}
                         disabled={paymentStatus === 'processing'}
                     >
-                        {paymentStatus === 'processing' ? 'Redirection...' : `Payer ${amountInXOF} XOF`}
+                        {paymentStatus === 'processing' ? 'Ouverture...' : `Payer ${amountInXOF} XOF`}
                     </button>
                 </div>
 
                 {paymentStatus === 'processing' && (
                     <div className="payment-status">
-                        <p>🔄 Redirection vers IpayMoney...</p>
+                        <p>🔄 Ouverture du portail de paiement...</p>
                         <p className="status-note">
-                            Si la redirection ne se fait pas automatiquement, vérifiez votre bloqueur de publicités.
+                            Si la fenêtre ne s'ouvre pas, vérifiez votre bloqueur de publicités.
                         </p>
                     </div>
                 )}
@@ -319,11 +433,9 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <p className="security-note">
                         🔒 Transaction sécurisée par IpayMoney - Environnement LIVE
                     </p>
-                    {sdkLoaded && (
-                        <p className="sdk-status">
-                            Statut SDK: <span className="status-success">Prêt</span>
-                        </p>
-                    )}
+                    <p className="sdk-status">
+                        Mode: <span className="status-success">Manuel</span>
+                    </p>
                 </div>
             </div>
         </div>
