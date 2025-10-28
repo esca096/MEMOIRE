@@ -150,7 +150,7 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION COMPLÈTEMENT CORRIGÉE
+// Composant IpayMoney - VERSION CORRECTE
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [error, setError] = useState(null);
@@ -165,42 +165,28 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     // Vérification du chargement du SDK IpayMoney
     useEffect(() => {
         const checkSDK = () => {
-            if (typeof window.IpayPayment !== 'undefined') {
-                console.log('✅ SDK IpayMoney détecté');
+            // Ce SDK ne crée pas d'objet global, on vérifie si le script est chargé
+            // en testant si la fonctionnalité est disponible
+            const scriptLoaded = document.querySelector('script[src*="i-pay.money/checkout.js"]');
+            
+            if (scriptLoaded) {
+                console.log('✅ Script IpayMoney détecté dans le DOM');
                 setSdkLoaded(true);
-                
-                // Réinitialiser le SDK pour qu'il reconnaisse notre bouton
-                if (typeof window.IpayPayment.init === 'function') {
-                    window.IpayPayment.init();
-                    console.log('✅ SDK IpayMoney réinitialisé');
-                }
             } else {
-                console.warn('❌ SDK IpayMoney non trouvé');
+                console.log('❌ Script IpayMoney non trouvé dans le DOM');
                 setSdkLoaded(false);
             }
         };
 
-        // Vérifier immédiatement
-        checkSDK();
+        // Vérifier après un délai pour laisser le script se charger
+        const timer = setTimeout(() => {
+            checkSDK();
+        }, 1000);
 
-        // Vérifier à intervalles réguliers au cas où le SDK se chargerait plus tard
-        const interval = setInterval(checkSDK, 1000);
-        
-        // Timeout après 10 secondes
-        const timeout = setTimeout(() => {
-            clearInterval(interval);
-            if (!sdkLoaded) {
-                setError('SDK IpayMoney non chargé après 10 secondes. Rechargez la page.');
-            }
-        }, 10000);
+        return () => clearTimeout(timer);
+    }, []);
 
-        return () => {
-            clearInterval(interval);
-            clearTimeout(timeout);
-        };
-    }, [sdkLoaded]);
-
-    // Vérification du statut du paiement (avec timeout)
+    // Vérification du statut du paiement
     useEffect(() => {
         if (paymentStatus === 'processing') {
             let checkCount = 0;
@@ -242,19 +228,12 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const amountInXOF = Math.round(totalPrice);
 
     const handleIpayMoneyPayment = () => {
-        if (!sdkLoaded) {
-            setError('SDK IpayMoney non chargé. Veuillez recharger la page.');
-            return;
-        }
-
-        console.log('🔄 Démarrage paiement IpayMoney LIVE...');
+        console.log('🔄 Démarrage paiement IpayMoney...');
         setPaymentStatus('processing');
         setError(null);
 
-        // Forcer une dernière initialisation
-        if (typeof window.IpayPayment !== 'undefined' && typeof window.IpayPayment.init === 'function') {
-            window.IpayPayment.init();
-        }
+        // Le SDK va automatiquement détecter le clic sur le bouton
+        // avec les data-attributs et gérer le paiement
     };
 
     if (paymentStatus === 'success') {
@@ -289,17 +268,11 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                             >
                                 Réessayer
                             </button>
-                            <button 
-                                onClick={() => window.location.reload()}
-                                className="reload-button"
-                            >
-                                Recharger la page
-                            </button>
                         </div>
                     </div>
                 )}
                 
-                {!sdkLoaded && !error && (
+                {!sdkLoaded && (
                     <div className="loading-sdk">
                         <p>Chargement du système de paiement...</p>
                     </div>
@@ -314,7 +287,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY - VERSION CORRIGÉE */}
+                {/* BOUTON IPAYMONEY - VERSION CORRECTE */}
                 <div className="ipaymoney-button-container">
                     <button
                         ref={buttonRef}
@@ -327,7 +300,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                         data-redirect-url={`https://memoire-hazel.vercel.app/order-confirmation/`}
                         data-callback-url={`https://memoire-backend-4rx4.onrender.com/api/ipaymoney/callback/`}
                         onClick={handleIpayMoneyPayment}
-                        disabled={paymentStatus === 'processing' || !sdkLoaded}
+                        disabled={paymentStatus === 'processing'}
                     >
                         {paymentStatus === 'processing' ? 'Redirection...' : `Payer ${amountInXOF} XOF`}
                     </button>
@@ -346,11 +319,6 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <p className="security-note">
                         🔒 Transaction sécurisée par IpayMoney - Environnement LIVE
                     </p>
-                    {!sdkLoaded && (
-                        <p className="sdk-status">
-                            Statut SDK: <span className="status-warning">En cours de chargement...</span>
-                        </p>
-                    )}
                     {sdkLoaded && (
                         <p className="sdk-status">
                             Statut SDK: <span className="status-success">Prêt</span>
