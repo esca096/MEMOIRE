@@ -403,8 +403,8 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
                     <ul className="payment-methods-list">
                         <li>💳 Cartes Visa, Mastercard</li>
-                        <li>📱 Mobile Money (Orange Money, MTN Money, etc.)</li>
-                        <li>🏦 Virements bancaires</li>
+                        <li>📱 Mobile Money (Orange Money, Airtel Money, etc.)</li>
+                        <li>🏦 Paiement via NITA, AMANATA ...</li>
                     </ul>
                 </div>
 
@@ -431,7 +431,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
 
                 <div className="payment-security">
                     <p className="security-note">
-                        🔒 Transaction sécurisée par IpayMoney - Environnement LIVE
+                        🔒 Transaction sécurisée par IpayMoney
                     </p>
                     <p className="sdk-status">
                         Mode: <span className="status-success">Manuel</span>
