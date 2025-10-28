@@ -44,8 +44,7 @@
 
 /**
  * Fichier: frontend/src/components/OrderConfirmation.jsx
- * 
- * INTÉGRATION IPAYMONEY COMPLÈTE - ENVIRONNEMENT LIVE
+ * VERSION COMPLÈTE CORRIGÉE
  */
 
 import React, { useState, useEffect } from 'react';
@@ -151,45 +150,63 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION LIVE
+// Composant IpayMoney - VERSION CORRIGÉE
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
+    const [error, setError] = useState(null);
 
     // Génération d'un ID de transaction unique
     const generateTransactionId = () => {
         return `TECHSHOP-${orderId}-${Date.now()}`;
     };
 
-    // Vérification que le SDK est chargé
+    // Initialisation du SDK IpayMoney
     useEffect(() => {
-        const checkSDK = () => {
-            if (typeof window.ipaymoney === 'undefined') {
-                console.error('❌ SDK IpayMoney non chargé');
-                // Recharger le script si nécessaire
-                const script = document.createElement('script');
-                script.src = 'https://i-pay.money/checkout.js';
-                script.onload = () => console.log('✅ SDK IpayMoney chargé');
-                document.head.appendChild(script);
+        const initSDK = () => {
+            if (typeof window.IpayPayment !== 'undefined' && typeof window.IpayPayment.init === 'function') {
+                window.IpayPayment.init(); 
+                console.log('✅ SDK IpayMoney ré-initialisé après rendu du bouton.');
             } else {
-                console.log('✅ SDK IpayMoney prêt');
+                console.warn('⚠️ SDK IpayMoney non disponible immédiatement');
             }
         };
 
-        checkSDK();
-    }, []);
+        const timer = setTimeout(initSDK, 500); 
+        return () => clearTimeout(timer);
+    }, []); 
 
-    // Vérification du statut du paiement
+    // Vérification du statut du paiement (avec timeout)
     useEffect(() => {
         if (paymentStatus === 'processing') {
+            let checkCount = 0;
+            const maxChecks = 60; // 5 minutes max (60 * 5s = 300s)
+            
             const checkInterval = setInterval(async () => {
                 try {
+                    checkCount++;
                     const response = await api.get(`https://memoire-backend-4rx4.onrender.com/api/orders/${orderId}/verify_ipaymoney/`);
+                    
                     if (response.data.status === 'completed') {
                         setPaymentStatus('success');
+                        clearInterval(checkInterval);
+                    } else if (response.data.status === 'failed') {
+                        setPaymentStatus('idle');
+                        setError('Le paiement a échoué. Veuillez réessayer.');
+                        clearInterval(checkInterval);
+                    }
+                    
+                    // Timeout après 5 minutes
+                    if (checkCount >= maxChecks) {
+                        setPaymentStatus('idle');
+                        setError('Délai de vérification dépassé. Vérifiez votre email ou contactez le support.');
                         clearInterval(checkInterval);
                     }
                 } catch (error) {
                     console.log('Erreur vérification paiement:', error);
+                    if (checkCount >= 3) { // Après 3 erreurs consécutives
+                        setError('Erreur de vérification. Vérifiez manuellement le statut.');
+                        clearInterval(checkInterval);
+                    }
                 }
             }, 5000);
 
@@ -197,8 +214,8 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         }
     }, [paymentStatus, orderId]);
 
-    // Clé publique LIVE - REMPLACEZ PAR VOTRE VRAIE CLÉ LIVE
     const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY;
+    const amountInXOF = Math.round(totalPrice);
 
     if (paymentStatus === 'success') {
         return (
@@ -210,7 +227,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
             </div>
         );
     }
-
+    
     return (
         <div className="ipaymoney-payment-container">
             <div className="payment-method-card ipaymoney-card">
@@ -218,6 +235,21 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <h3>🌍 Payer avec IpayMoney</h3>
                     <span className="secure-badge">Sécurisé</span>
                 </div>
+                
+                {error && (
+                    <div className="error-message">
+                        <p>{error}</p>
+                        <button 
+                            onClick={() => {
+                                setError(null);
+                                setPaymentStatus('idle');
+                            }}
+                            className="retry-button"
+                        >
+                            Réessayer
+                        </button>
+                    </div>
+                )}
                 
                 <div className="method-description">
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
@@ -228,12 +260,12 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY - ENVIRONNEMENT LIVE */}
+                {/* BOUTON IPAYMONEY - CORRIGÉ */}
                 <div className="ipaymoney-button-container">
                     <button
                         type="button"
                         className="ipaymoney-button"
-                        data-amount={Math.round(totalPrice * 100)}
+                        data-amount={amountInXOF}
                         data-environement="live"
                         data-key={ipaymoneyPublicKey}
                         data-transaction-id={generateTransactionId()}
@@ -242,16 +274,17 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                         onClick={() => {
                             console.log('🔄 Démarrage paiement IpayMoney LIVE...');
                             setPaymentStatus('processing');
+                            setError(null);
                             
-                            // Vérification finale
-                            if (typeof window.ipaymoney === 'undefined') {
-                                alert('SDK IpayMoney non chargé. Rechargez la page.');
+                            if (typeof window.IpayPayment === 'undefined') {
+                                setError('SDK de paiement non chargé. Rechargez la page.');
+                                setPaymentStatus('idle');
                                 return;
                             }
                         }}
                         disabled={paymentStatus === 'processing'}
                     >
-                        {paymentStatus === 'processing' ? 'Redirection...' : `Payer ${totalPrice} XOF`}
+                        {paymentStatus === 'processing' ? 'Redirection...' : `Payer ${amountInXOF} XOF`}
                     </button>
                 </div>
 
@@ -465,7 +498,7 @@ const OrderConfirmation = () => {
                     </div>
                 </div>
             )}
-        </div>       
+        </div>        
     );
 }
 
