@@ -150,7 +150,7 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION AVEC RÉINITIALISATION DU SDK
+// Composant IpayMoney - VERSION CORRECTE
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [error, setError] = useState(null);
@@ -162,65 +162,29 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         return `TECHSHOP-${orderId}-${Date.now()}`;
     };
 
-    // Vérification du chargement du SDK IpayMoney et réinitialisation
+    // Vérification du chargement du SDK IpayMoney
     useEffect(() => {
-        const checkAndReinitSDK = () => {
+        const checkSDK = () => {
+            // Ce SDK ne crée pas d'objet global, on vérifie si le script est chargé
+            // en testant si la fonctionnalité est disponible
             const scriptLoaded = document.querySelector('script[src*="i-pay.money/checkout.js"]');
             
             if (scriptLoaded) {
                 console.log('✅ Script IpayMoney détecté dans le DOM');
                 setSdkLoaded(true);
-                
-                // FORCER la réinitialisation du SDK pour qu'il trouve les nouveaux boutons
-                // On simule un nouvel événement DOMContentLoaded
-                setTimeout(() => {
-                    console.log('🔄 Réinitialisation du SDK IpayMoney...');
-                    
-                    // Réattacher les événements aux boutons
-                    const ipaymoneyButtons = document.querySelectorAll('.ipaymoney-button');
-                    console.log(`🔍 ${ipaymoneyButtons.length} bouton(s) IpayMoney trouvé(s)`);
-                    
-                    if (ipaymoneyButtons.length > 0) {
-                        // Déclencher manuellement le code d'initialisation du SDK
-                        if (typeof window.onIpayMoneySDKReady === 'function') {
-                            window.onIpayMoneySDKReady();
-                        }
-                        
-                        // Alternative : réappliquer les événements click
-                        ipaymoneyButtons.forEach(button => {
-                            // Supprimer les anciens événements
-                            button.replaceWith(button.cloneNode(true));
-                        });
-                        
-                        console.log('✅ SDK réinitialisé avec les nouveaux boutons');
-                    }
-                }, 500);
             } else {
                 console.log('❌ Script IpayMoney non trouvé dans le DOM');
                 setSdkLoaded(false);
             }
         };
 
-        const timer = setTimeout(checkAndReinitSDK, 1000);
+        // Vérifier après un délai pour laisser le script se charger
+        const timer = setTimeout(() => {
+            checkSDK();
+        }, 1000);
+
         return () => clearTimeout(timer);
     }, []);
-
-    // Réinitialisation supplémentaire quand le bouton est rendu
-    useEffect(() => {
-        if (buttonRef.current && sdkLoaded) {
-            console.log('🎯 Bouton IpayMoney rendu, réinitialisation...');
-            
-            // Donner du temps au DOM de se mettre à jour
-            setTimeout(() => {
-                // Réappliquer les événements
-                const newButton = buttonRef.current.cloneNode(true);
-                buttonRef.current.parentNode.replaceChild(newButton, buttonRef.current);
-                buttonRef.current = newButton;
-                
-                console.log('✅ Bouton réinitialisé pour le SDK');
-            }, 300);
-        }
-    }, [sdkLoaded, paymentMethod]); // Ajoutez paymentMethod si nécessaire
 
     // Vérification du statut du paiement
     useEffect(() => {
@@ -268,16 +232,8 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         setPaymentStatus('processing');
         setError(null);
 
-        // Vérification finale que le SDK est prêt
-        setTimeout(() => {
-            const buttons = document.querySelectorAll('.ipaymoney-button');
-            console.log(`🎯 ${buttons.length} bouton(s) IpayMoney disponible(s)`);
-            
-            if (buttons.length === 0) {
-                setError('Bouton de paiement non détecté. Rechargez la page.');
-                setPaymentStatus('idle');
-            }
-        }, 100);
+        // Le SDK va automatiquement détecter le clic sur le bouton
+        // avec les data-attributs et gérer le paiement
     };
 
     if (paymentStatus === 'success') {
@@ -312,12 +268,6 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                             >
                                 Réessayer
                             </button>
-                            <button 
-                                onClick={() => window.location.reload()}
-                                className="reload-button"
-                            >
-                                Recharger la page
-                            </button>
                         </div>
                     </div>
                 )}
@@ -337,7 +287,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY */}
+                {/* BOUTON IPAYMONEY - VERSION CORRECTE */}
                 <div className="ipaymoney-button-container">
                     <button
                         ref={buttonRef}
@@ -362,17 +312,6 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                         <p className="status-note">
                             Si la redirection ne se fait pas automatiquement, vérifiez votre bloqueur de publicités.
                         </p>
-                        <button 
-                            onClick={() => {
-                                // Forcer le clic sur le bouton
-                                const button = document.querySelector('.ipaymoney-button');
-                                if (button) button.click();
-                            }}
-                            className="retry-button"
-                            style={{marginTop: '10px'}}
-                        >
-                            Forcer l'ouverture
-                        </button>
                     </div>
                 )}
 
@@ -390,7 +329,6 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         </div>
     );
 };
-
 // Composant principal OrderConfirmation
 const OrderConfirmation = () => {
     const {id} = useParams();
