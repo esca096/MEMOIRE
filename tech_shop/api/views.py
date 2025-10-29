@@ -595,7 +595,6 @@ def verify_ipaymoney_payment(request, order_id):
         return JsonResponse({'error': 'Commande non trouvée'}, status=404)
 
 
-
 # =============================================================================
 # SUPPRESSION HISTORIQUE DES COMMANDES (ADMIN)
 # =============================================================================
