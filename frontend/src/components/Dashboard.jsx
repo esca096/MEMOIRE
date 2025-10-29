@@ -109,40 +109,72 @@ const Dashboard = () => {
     };
 
     // NOUVELLE FONCTION : Supprimer l'historique des commandes
-    const deleteOrderHistory = async () => {
-        if (!isAdmin) {
-            setError('Action réservée aux administrateurs');
-            return;
+   // Dans votre Dashboard.jsx - MODIFIEZ LA FONCTION deleteOrderHistory
+
+const deleteOrderHistory = async () => {
+    if (!isAdmin) {
+        setError('Action réservée aux administrateurs');
+        return;
+    }
+
+    setDeleting(true);
+    try {
+        const accessToken = localStorage.getItem(ACCESS_TOKEN);
+        console.log('🔑 Token:', accessToken ? 'Présent' : 'Manquant');
+        
+        const headers = {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
         }
 
-        setDeleting(true);
-        try {
-            const accessToken = localStorage.getItem(ACCESS_TOKEN);
-            const headers = {
-                Authorization: `Bearer ${accessToken}`,
-            }
-
-            // Appel à l'API pour supprimer l'historique
-            const response = await api.delete('/api/delete_order_history/', { headers });
+        console.log('🚀 Envoi requête DELETE vers:', '/api/delete_order_history/');
+        
+        // METHODE 1: Utilisez axios directement avec la méthode DELETE
+        const response = await api.delete('/api/delete_order_history/', { headers });
+        
+        console.log('✅ Réponse du serveur:', response.data);
+        
+        if (response.status === 200) {
+            // Réinitialiser les données locales
+            setOrders([]);
+            setTotalOrders(0);
+            setCurrentPage(1);
+            setShowDeleteConfirm(false);
+            alert('Historique des commandes supprimé avec succès!');
+        }
+    } catch (error) {
+        console.error('❌ Erreur complète:', error);
+        console.error('📋 Response error:', error.response);
+        
+        let errorMessage = 'Une erreur sest produite lors de la suppression';
+        
+        if (error.response) {
+            // Le serveur a répondu avec un code d'erreur
+            console.error('📊 Status:', error.response.status);
+            console.error('📦 Data:', error.response.data);
             
-            if (response.status === 200) {
-                // Réinitialiser les données locales
-                setOrders([]);
-                setTotalOrders(0);
-                setCurrentPage(1);
-                setShowDeleteConfirm(false);
-                alert('Historique des commandes supprimé avec succès!');
+            if (error.response.status === 403) {
+                errorMessage = 'Accès refusé. Administrateur requis.';
+            } else if (error.response.status === 405) {
+                errorMessage = 'Méthode non autorisée.';
+            } else if (error.response.data && error.response.data.error) {
+                errorMessage = error.response.data.error;
             }
-        } catch (error) {
-            console.error('Erreur lors de la suppression de l\'historique:', error);
-            const errorMessage = error.response
-                ? error.response.data.error || 'Une erreur sest produite lors de la suppression'
-                : 'Une erreur sest produite: ' + error.message;
-            setError(errorMessage);
-        } finally {
-            setDeleting(false);
+        } else if (error.request) {
+            // La requête a été faite mais aucune réponse n'a été reçue
+            console.error('🌐 No response received:', error.request);
+            errorMessage = 'Aucune réponse du serveur. Vérifiez votre connexion.';
+        } else {
+            // Quelque chose s'est mal passé lors de la configuration de la requête
+            console.error('⚙️ Request setup error:', error.message);
+            errorMessage = 'Erreur de configuration: ' + error.message;
         }
-    };
+        
+        setError(errorMessage);
+    } finally {
+        setDeleting(false);
+    }
+};
 
     // Récupération du résumé des produits
     const fetchProductsSummary = async () => {
