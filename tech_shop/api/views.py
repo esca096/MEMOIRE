@@ -593,3 +593,47 @@ def verify_ipaymoney_payment(request, order_id):
             
     except Order.DoesNotExist:
         return JsonResponse({'error': 'Commande non trouvée'}, status=404)
+
+
+
+# =============================================================================
+# SUPPRESSION HISTORIQUE DES COMMANDES (ADMIN)
+# =============================================================================
+@csrf_exempt
+@login_required
+def delete_order_history(request):
+    """
+    Supprime tout l'historique des commandes (admin seulement)
+    """
+    if request.method != 'DELETE':
+        return JsonResponse({
+            'error': 'Méthode non autorisée. Utilisez DELETE.'
+        }, status=405)
+    
+    # Vérification que l'utilisateur est admin
+    if not request.user.is_staff:
+        return JsonResponse({
+            'error': 'Accès refusé. Administrateur requis.'
+        }, status=403)
+    
+    try:
+        # Compter le nombre de commandes avant suppression
+        order_count = Order.objects.count()
+        
+        # Supprimer toutes les commandes
+        deleted_count, _ = Order.objects.all().delete()
+        
+        print(f"✅ Historique commandes supprimé: {deleted_count} commandes effacées")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Historique des commandes supprimé avec succès',
+            'deleted_orders': deleted_count,
+            'previous_count': order_count
+        }, status=200)
+        
+    except Exception as e:
+        print(f"❌ Erreur suppression historique: {str(e)}")
+        return JsonResponse({
+            'error': f'Erreur lors de la suppression: {str(e)}'
+        }, status=500)
