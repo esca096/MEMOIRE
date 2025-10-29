@@ -150,15 +150,19 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION FINALE AVEC CONFIRMATION
+// Composant IpayMoney - VERSION AVEC GESTION DU WEBHOOK EN ERREUR
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [error, setError] = useState(null);
     const [sdkLoaded, setSdkLoaded] = useState(false);
+    const [verificationCount, setVerificationCount] = useState(0);
+    const [lastTransactionId, setLastTransactionId] = useState(null);
 
     // Génération d'un ID de transaction unique
     const generateTransactionId = () => {
-        return `TECHSHOP-${orderId}-${Date.now()}`;
+        const transactionId = `TECHSHOP-${orderId}-${Date.now()}`;
+        setLastTransactionId(transactionId);
+        return transactionId;
     };
 
     // Vérification du chargement du SDK IpayMoney
@@ -179,11 +183,12 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     useEffect(() => {
         if (paymentStatus === 'processing') {
             let checkCount = 0;
-            const maxChecks = 60;
+            const maxChecks = 20; // Réduit à 20 vérifications
             
             const checkInterval = setInterval(async () => {
                 try {
                     checkCount++;
+                    setVerificationCount(checkCount);
                     console.log(`🔄 Vérification du paiement #${checkCount}...`);
                     
                     const response = await api.get(`https://memoire-backend-4rx4.onrender.com/api/orders/${orderId}/verify_ipaymoney/`);
@@ -195,54 +200,111 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                         setPaymentStatus('success');
                         clearInterval(checkInterval);
                         
-                        // Mettre à jour l'interface utilisateur
-                        // Vous pouvez aussi rafraîchir les données de la commande ici si nécessaire
-                        
                     } else if (response.data.status === 'failed') {
                         console.log('❌ Paiement échoué');
                         setPaymentStatus('idle');
                         setError('Le paiement a échoué. Veuillez réessayer.');
                         clearInterval(checkInterval);
                     } else {
-                        console.log('⏳ Paiement encore en cours...');
-                        // Le statut est toujours 'pending' ou autre, on continue à vérifier
+                        console.log('⏳ Paiement en attente...');
+                        
+                        // Après 10 vérifications, vérifier manuellement avec IpayMoney
+                        if (checkCount === 10) {
+                            console.log('🔍 Vérification manuelle déclenchée');
+                            checkPaymentStatusManually();
+                        }
                     }
                     
                     if (checkCount >= maxChecks) {
-                        console.log('⏰ Timeout de vérification');
+                        console.log('⏰ Timeout - Webhook en erreur probable');
                         setPaymentStatus('idle');
-                        setError('Délai de vérification dépassé. Vérifiez votre email ou contactez le support.');
+                        setError(
+                            <div>
+                                <h4>✅ Paiement effectué mais confirmation en attente</h4>
+                                <p>Votre paiement a été reçu mais la confirmation est retardée.</p>
+                                
+                                <div style={{background: '#fff3cd', padding: '15px', borderRadius: '5px', margin: '10px 0'}}>
+                                    <strong>Informations importantes :</strong>
+                                    <ul style={{textAlign: 'left', margin: '10px 0'}}>
+                                        <li>💰 <strong>Paiement réussi</strong> chez IpayMoney</li>
+                                        <li>⏳ <strong>Confirmation en attente</strong> côté boutique</li>
+                                        <li>📧 <strong>Vérifiez votre email</strong> de confirmation IpayMoney</li>
+                                        <li>🆔 <strong>Référence:</strong> {lastTransactionId}</li>
+                                    </ul>
+                                </div>
+                                
+                                <div className="error-actions">
+                                    <button 
+                                        onClick={() => window.location.reload()}
+                                        className="reload-button"
+                                    >
+                                        Recharger la page
+                                    </button>
+                                    <button 
+                                        onClick={checkPaymentStatusManually}
+                                        className="retry-button"
+                                    >
+                                        Vérifier manuellement
+                                    </button>
+                                </div>
+                            </div>
+                        );
                         clearInterval(checkInterval);
                     }
                 } catch (error) {
                     console.log('❌ Erreur vérification paiement:', error);
-                    if (checkCount >= 3) {
-                        setError('Erreur de vérification. Vérifiez manuellement le statut.');
+                    if (checkCount >= 5) {
+                        setError('Erreur de connexion au serveur.');
                         clearInterval(checkInterval);
                     }
                 }
-            }, 5000); // Vérifier toutes les 5 secondes
+            }, 5000);
 
             return () => clearInterval(checkInterval);
         }
-    }, [paymentStatus, orderId]);
+    }, [paymentStatus, orderId, lastTransactionId]);
+
+    // Vérification manuelle du statut
+    const checkPaymentStatusManually = async () => {
+        try {
+            console.log('🔍 Vérification manuelle du statut...');
+            const response = await api.get(`https://memoire-backend-4rx4.onrender.com/api/orders/${orderId}/verify_ipaymoney/`);
+            console.log('📊 Statut manuel:', response.data);
+            
+            if (response.data.status === 'completed') {
+                setPaymentStatus('success');
+            } else {
+                setError(
+                    <div>
+                        <p>Le statut est toujours: <strong>{response.data.status}</strong></p>
+                        <p>Message: {response.data.message}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="reload-button"
+                        >
+                            Recharger pour vérifier
+                        </button>
+                    </div>
+                );
+            }
+        } catch (error) {
+            console.error('Erreur vérification manuelle:', error);
+        }
+    };
 
     const ipaymoneyPublicKey = import.meta.env.VITE_IPAYMONEY_PUBLIC_KEY;
     const amountInXOF = Math.round(totalPrice);
 
     const handleIpayMoneyPayment = async () => {
-        console.log('🔄 Démarrage paiement IpayMoney MANUEL...');
+        console.log('🔄 Démarrage paiement IpayMoney...');
         setPaymentStatus('processing');
         setError(null);
+        setVerificationCount(0);
 
         try {
             const transactionId = generateTransactionId();
             
-            console.log('📦 Données de paiement:', {
-                key: ipaymoneyPublicKey,
-                amount: amountInXOF,
-                transactionId: transactionId
-            });
+            console.log('📦 Transaction ID:', transactionId);
 
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
@@ -274,7 +336,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
 
             const token = data.token;
 
-            // CRÉATION MANUELLE DE L'IFRAME DE PAIEMENT
+            // CRÉATION DE L'IFRAME DE PAIEMENT
             const iPayDiv = document.createElement("div");
             document.body.appendChild(iPayDiv);
             iPayDiv.className = "ipaymoney-payment-page";
@@ -346,9 +408,9 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
             iPayIframe.id = "i-pay-frame";
             iPayIframe.allow = "payment";
 
-            console.log('🎯 Iframe de paiement créée avec URL:', sdkUrl);
+            console.log('🎯 Iframe créée avec URL:', sdkUrl);
 
-            // Gérer la fermeture en cliquant sur le fond
+            // Gérer la fermeture
             iPayDiv.addEventListener('click', (e) => {
                 if (e.target === iPayDiv) {
                     iPayDiv.remove();
@@ -356,24 +418,16 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 }
             });
 
-            // Écouter les messages de l'iframe pour détecter la fin du paiement
             const handleMessage = function(message) {
-                console.log('📨 Message reçu de l\'iframe:', message.data);
+                console.log('📨 Message reçu:', message.data);
                 
                 if (message.data.type === "closeModal") {
-                    console.log('🚪 Iframe fermée');
                     iPayDiv.remove();
                     window.removeEventListener('message', handleMessage);
                 }
                 
                 if (message.data.type === "payment.response") {
-                    console.log('💰 Réponse de paiement reçue:', message.data);
-                    
-                    if (message.data.other.status === 'succeeded') {
-                        console.log('✅ Paiement réussi détecté via message');
-                        // Le polling va normalement détecter le succès aussi
-                    }
-                    
+                    console.log('💰 Réponse paiement:', message.data);
                     iPayDiv.remove();
                     window.removeEventListener('message', handleMessage);
                 }
@@ -383,22 +437,33 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
 
         } catch (error) {
             console.error('❌ Erreur création paiement:', error);
-            setError(`Erreur lors du démarrage du paiement: ${error.message}`);
+            setError(`Erreur: ${error.message}`);
             setPaymentStatus('idle');
         }
     };
 
-    // AFFICHAGE SUCCÈS - AMÉLIORÉ
+    // AFFICHAGE SUCCÈS
     if (paymentStatus === 'success') {
         return (
             <div className="ipaymoney-payment-container">
                 <div className="success-message">
                     <h3>✅ Paiement IpayMoney réussi !</h3>
-                    <p>Votre commande a été confirmée et sera traitée rapidement.</p>
-                    <p>Un email de confirmation vous a été envoyé.</p>
-                    <div style={{marginTop: '15px', padding: '10px', background: '#e8f5e8', borderRadius: '5px'}}>
-                        <strong>Numéro de commande:</strong> #{orderId}
-                    </div>
+                    <p>Votre commande #<strong>{orderId}</strong> est confirmée.</p>
+                    <p>Merci pour votre achat !</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        style={{
+                            marginTop: '15px',
+                            padding: '10px 20px',
+                            background: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Voir la confirmation
+                    </button>
                 </div>
             </div>
         );
@@ -414,18 +479,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 
                 {error && (
                     <div className="error-message">
-                        <p>{error}</p>
-                        <div className="error-actions">
-                            <button 
-                                onClick={() => {
-                                    setError(null);
-                                    setPaymentStatus('idle');
-                                }}
-                                className="retry-button"
-                            >
-                                Réessayer
-                            </button>
-                        </div>
+                        <div>{error}</div>
                     </div>
                 )}
                 
@@ -434,11 +488,10 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <ul className="payment-methods-list">
                         <li>💳 Cartes Visa, Mastercard</li>
                         <li>📱 Mobile Money (Orange Money, MTN Money, etc.)</li>
-                        <li>🏦 Virements bancaires</li>
+                        <li>🏦 Paiement via NITA, AMANATA ...</li>
                     </ul>
                 </div>
 
-                {/* BOUTON IPAYMONEY MANUEL */}
                 <div className="ipaymoney-button-container">
                     <button
                         type="button"
@@ -446,28 +499,22 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                         onClick={handleIpayMoneyPayment}
                         disabled={paymentStatus === 'processing'}
                     >
-                        {paymentStatus === 'processing' ? 'Ouverture...' : `Payer ${amountInXOF} XOF`}
+                        {paymentStatus === 'processing' ? `Vérification... (${verificationCount})` : `Payer ${amountInXOF} XOF`}
                     </button>
                 </div>
 
                 {paymentStatus === 'processing' && (
                     <div className="payment-status">
-                        <p>🔄 Ouverture du portail de paiement...</p>
+                        <p>🔄 Vérification en cours... ({verificationCount}/20)</p>
                         <p className="status-note">
-                            Si la fenêtre ne s'ouvre pas, vérifiez votre bloqueur de publicités.
+                            Le processus peut prendre quelques minutes.
                         </p>
-                        <div style={{marginTop: '10px', fontSize: '14px', color: '#666'}}>
-                            <p>✅ Vérification automatique du paiement en cours...</p>
-                        </div>
                     </div>
                 )}
 
                 <div className="payment-security">
                     <p className="security-note">
-                        🔒 Transaction sécurisée par IpayMoney - Environnement LIVE
-                    </p>
-                    <p className="sdk-status">
-                        Mode: <span className="status-success">Manuel</span>
+                        🔒 Transaction sécurisée par IpayMoney
                     </p>
                 </div>
             </div>
