@@ -214,58 +214,59 @@ const deleteOrderHistory = async () => {
     );
 
     // Rendu des commandes AVEC BOUTON SUPPRESSION
+    // Rendu des commandes AVEC BOUTON SUPPRESSION - VERSION CORRIGÉE
     const renderOrders = () => (
-        <div>
-            <div className="orders-header">
-                <h3>Commandes</h3>
-                {isAdmin && orders.length > 0 && (
-                    <button 
-                        className="delete-history-btn"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        disabled={deleting}
-                    >
-                        {deleting ? 'Suppression...' : 'Supprimer l\'historique'}
-                    </button>
-                )}
-            </div>
-            
-            {orders.length > 0 ? (
-                <ul className="orders-list">
-                    {orders.map((order) => (
-                        <li key={order.id} className="order-item">
-                            <div className="left">
-                                <strong>Commande #{order.id}</strong>
-                                <br />
-                                Statut: {order.status}
-                                <br />
-                                Total: {order.total_price} XOF
-                            </div>
-                            <div className="right">
-                                Client: {order.user.username}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p className="no-orders">Aucune commande trouvée.</p>
+    <div>
+        <div className="orders-header">
+            <h3>Commandes</h3>
+            {isAdmin && (
+                <button 
+                    className="delete-history-btn"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={deleting || orders.length === 0}
+                >
+                    {deleting ? 'Suppression...' : 'Supprimer l\'historique'}
+                </button>
             )}
-            
-            {/* Pagination */}
-            <div className='pagination'>
-                {totalOrders > ordersPerPage && (
-                    Array.from({length: Math.ceil(totalOrders / ordersPerPage)}, (_, index) => (
-                        <button
-                            key={index + 1}
-                            onClick={() => paginate(index + 1)}
-                            disabled={currentPage === index + 1}
-                        >
-                            {index + 1}
-                        </button>
-                    ))
-                )}
-            </div>
         </div>
-    )
+        
+        {orders.length > 0 ? (
+            <ul className="orders-list">
+                {orders.map((order) => (
+                    <li key={order.id} className="order-item">
+                        <div className="left">
+                            <strong>Commande #{order.id}</strong>
+                            <br />
+                            Statut: {order.status}
+                            <br />
+                            Total: {order.total_price} XOF
+                        </div>
+                        <div className="right">
+                            Client: {order.user.username}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <p className="no-orders">Aucune commande trouvée.</p>
+        )}
+        
+        {/* Pagination */}
+        <div className='pagination'>
+            {totalOrders > ordersPerPage && (
+                Array.from({length: Math.ceil(totalOrders / ordersPerPage)}, (_, index) => (
+                    <button
+                        key={index + 1}
+                        onClick={() => paginate(index + 1)}
+                        disabled={currentPage === index + 1}
+                    >
+                        {index + 1}
+                    </button>
+                ))
+            )}
+        </div>
+    </div>
+)
 
     // Rendu des fonctionnalités administrateur
     const renderAdminFeatures = () => (
