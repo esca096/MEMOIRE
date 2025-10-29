@@ -109,7 +109,9 @@ urlpatterns = [
     path('api/orders/<int:order_id>/verify_ipaymoney/', verify_ipaymoney_payment, name='verify_ipaymoney'),
 
 
-    # SUPPRESSION HISTORIQUE COMMANDES
+    # =============================================================================
+    # SUPPRESSION HISTORIQUE COMMANDES - CORRIGÉ
+    # =============================================================================
     path('api/delete_order_history/', delete_order_history, name='delete_order_history'),
 
 ]
