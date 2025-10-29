@@ -25,11 +25,12 @@ Comment ces fichiers se connectent :
 # =============================================================================
 from django.shortcuts import redirect
 from django.contrib.auth.models import User
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, status
 from .serialzers import UserSerializer, ProductSerializer, CartSerializer, OrderSerializer, ReviewSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from allauth.socialaccount.models import SocialToken, SocialAccount
 from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
@@ -596,43 +597,37 @@ def verify_ipaymoney_payment(request, order_id):
 
 
 # =============================================================================
-# SUPPRESSION HISTORIQUE DES COMMANDES (ADMIN)
+# SUPPRESSION HISTORIQUE DES COMMANDES (ADMIN) - VERSION PROFESSIONNELLE DRF
 # =============================================================================
-@csrf_exempt
-@login_required
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_order_history(request):
     """
-    Supprime tout l'historique des commandes (admin seulement)
+    DELETE /api/delete_order_history/
+    
+    Supprime tout l'historique des commandes.
+    Réservé aux administrateurs.
     """
-    if request.method != 'DELETE':
-        return JsonResponse({
-            'error': 'Méthode non autorisée. Utilisez DELETE.'
-        }, status=405)
-    
-    # Vérification que l'utilisateur est admin
-    if not request.user.is_staff:
-        return JsonResponse({
-            'error': 'Accès refusé. Administrateur requis.'
-        }, status=403)
-    
     try:
         # Compter le nombre de commandes avant suppression
         order_count = Order.objects.count()
+        print(f"🔍 Commandes avant suppression: {order_count}")
+        print(f"👤 Admin: {request.user.username}")
         
         # Supprimer toutes les commandes
         deleted_count, _ = Order.objects.all().delete()
         
         print(f"✅ Historique commandes supprimé: {deleted_count} commandes effacées")
         
-        return JsonResponse({
+        return Response({
             'success': True,
-            'message': f'Historique des commandes supprimé avec succès',
+            'message': 'Historique des commandes supprimé avec succès',
             'deleted_orders': deleted_count,
             'previous_count': order_count
-        }, status=200)
+        }, status=status.HTTP_200_OK)
         
     except Exception as e:
         print(f"❌ Erreur suppression historique: {str(e)}")
-        return JsonResponse({
+        return Response({
             'error': f'Erreur lors de la suppression: {str(e)}'
-        }, status=500)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
