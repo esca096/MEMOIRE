@@ -150,7 +150,7 @@ const PaymentForm = ({clientSecret, orderId, orderDetails}) => {
     );
 };
 
-// Composant IpayMoney - VERSION MANUELLE DÉFINITIVE
+// Composant IpayMoney - VERSION FINALE AVEC CONFIRMATION
 const IpayMoneyPayment = ({ orderId, totalPrice }) => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [error, setError] = useState(null);
@@ -175,7 +175,7 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         return () => clearTimeout(timer);
     }, []);
 
-    // Vérification du statut du paiement
+    // Vérification du statut du paiement - AMÉLIORÉE
     useEffect(() => {
         if (paymentStatus === 'processing') {
             let checkCount = 0;
@@ -184,30 +184,44 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
             const checkInterval = setInterval(async () => {
                 try {
                     checkCount++;
+                    console.log(`🔄 Vérification du paiement #${checkCount}...`);
+                    
                     const response = await api.get(`https://memoire-backend-4rx4.onrender.com/api/orders/${orderId}/verify_ipaymoney/`);
                     
+                    console.log('📊 Réponse vérification:', response.data);
+                    
                     if (response.data.status === 'completed') {
+                        console.log('✅ Paiement confirmé !');
                         setPaymentStatus('success');
                         clearInterval(checkInterval);
+                        
+                        // Mettre à jour l'interface utilisateur
+                        // Vous pouvez aussi rafraîchir les données de la commande ici si nécessaire
+                        
                     } else if (response.data.status === 'failed') {
+                        console.log('❌ Paiement échoué');
                         setPaymentStatus('idle');
                         setError('Le paiement a échoué. Veuillez réessayer.');
                         clearInterval(checkInterval);
+                    } else {
+                        console.log('⏳ Paiement encore en cours...');
+                        // Le statut est toujours 'pending' ou autre, on continue à vérifier
                     }
                     
                     if (checkCount >= maxChecks) {
+                        console.log('⏰ Timeout de vérification');
                         setPaymentStatus('idle');
                         setError('Délai de vérification dépassé. Vérifiez votre email ou contactez le support.');
                         clearInterval(checkInterval);
                     }
                 } catch (error) {
-                    console.log('Erreur vérification paiement:', error);
+                    console.log('❌ Erreur vérification paiement:', error);
                     if (checkCount >= 3) {
                         setError('Erreur de vérification. Vérifiez manuellement le statut.');
                         clearInterval(checkInterval);
                     }
                 }
-            }, 5000);
+            }, 5000); // Vérifier toutes les 5 secondes
 
             return () => clearInterval(checkInterval);
         }
@@ -342,19 +356,30 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                 }
             });
 
-            // Écouter les messages de l'iframe
-            window.addEventListener('message', function(message) {
+            // Écouter les messages de l'iframe pour détecter la fin du paiement
+            const handleMessage = function(message) {
                 console.log('📨 Message reçu de l\'iframe:', message.data);
+                
                 if (message.data.type === "closeModal") {
+                    console.log('🚪 Iframe fermée');
                     iPayDiv.remove();
-                    setPaymentStatus('idle');
+                    window.removeEventListener('message', handleMessage);
                 }
+                
                 if (message.data.type === "payment.response") {
-                    console.log('💰 Réponse de paiement:', message.data);
+                    console.log('💰 Réponse de paiement reçue:', message.data);
+                    
+                    if (message.data.other.status === 'succeeded') {
+                        console.log('✅ Paiement réussi détecté via message');
+                        // Le polling va normalement détecter le succès aussi
+                    }
+                    
                     iPayDiv.remove();
-                    // Le polling va détecter le succès
+                    window.removeEventListener('message', handleMessage);
                 }
-            });
+            };
+
+            window.addEventListener('message', handleMessage);
 
         } catch (error) {
             console.error('❌ Erreur création paiement:', error);
@@ -363,12 +388,17 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
         }
     };
 
+    // AFFICHAGE SUCCÈS - AMÉLIORÉ
     if (paymentStatus === 'success') {
         return (
             <div className="ipaymoney-payment-container">
                 <div className="success-message">
                     <h3>✅ Paiement IpayMoney réussi !</h3>
-                    <p>Votre commande a été confirmée.</p>
+                    <p>Votre commande a été confirmée et sera traitée rapidement.</p>
+                    <p>Un email de confirmation vous a été envoyé.</p>
+                    <div style={{marginTop: '15px', padding: '10px', background: '#e8f5e8', borderRadius: '5px'}}>
+                        <strong>Numéro de commande:</strong> #{orderId}
+                    </div>
                 </div>
             </div>
         );
@@ -403,8 +433,8 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                     <p>Paiement par carte bancaire, mobile money, et autres méthodes locales</p>
                     <ul className="payment-methods-list">
                         <li>💳 Cartes Visa, Mastercard</li>
-                        <li>📱 Mobile Money (Orange Money, Airtel Money, etc.)</li>
-                        <li>🏦 Paiement via NITA, AMANATA ...</li>
+                        <li>📱 Mobile Money (Orange Money, MTN Money, etc.)</li>
+                        <li>🏦 Virements bancaires</li>
                     </ul>
                 </div>
 
@@ -426,12 +456,15 @@ const IpayMoneyPayment = ({ orderId, totalPrice }) => {
                         <p className="status-note">
                             Si la fenêtre ne s'ouvre pas, vérifiez votre bloqueur de publicités.
                         </p>
+                        <div style={{marginTop: '10px', fontSize: '14px', color: '#666'}}>
+                            <p>✅ Vérification automatique du paiement en cours...</p>
+                        </div>
                     </div>
                 )}
 
                 <div className="payment-security">
                     <p className="security-note">
-                        🔒 Transaction sécurisée par IpayMoney
+                        🔒 Transaction sécurisée par IpayMoney - Environnement LIVE
                     </p>
                     <p className="sdk-status">
                         Mode: <span className="status-success">Manuel</span>
