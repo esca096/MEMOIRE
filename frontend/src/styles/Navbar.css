@@ -1,420 +1,543 @@
-/* Navbar.css */
+/* Navbar.css - VERSION MODERNE ET PROFESSIONNELLE */
 
 /* ================================================= */
-/* 1. STYLES DE BASE (Bureau/Desktop) */
+/* VARIABLES CSS */
+/* ================================================= */
+:root {
+  --primary-color: #3D56FF;
+  --primary-dark: #2C44CC;
+  --primary-light: #5B72FF;
+  --text-dark: #1a1a1a;
+  --text-light: #666666;
+  --text-lighter: #888888;
+  --background: #ffffff;
+  --background-alt: #f8f9fa;
+  --border-color: #e1e5e9;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================================================= */
+/* 1. STYLES DE BASE */
 /* ================================================= */
 
 .navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background-color: whitesmoke;
-    position: relative; /* Pour le positionnement du popover */
-    z-index: 100; /* Assure que la navbar est au-dessus */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--background);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* Logo */
 .navbar-logo-link {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.navbar-logo-link:hover {
+  transform: translateY(-1px);
 }
 
 .navbar-logo {
-    height: 50px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
 }
 
-.navbar-logo:hover {
-    transform: scale(1.05);
-}
-
+/* Menus de navigation */
 .navbar-menu-left,
 .navbar-menu-right {
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin: 0;
-    padding: 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
 }
 
 .navbar-menu-left {
-    margin-left: 80px;
-    gap: 55px;
-}
-
-.navbar-menu-left a {
-    color: #5f6063;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-    padding: 8px 12px;
-    border-radius: 4px;
-}
-
-.navbar-menu-left a:hover {
-    color: #171717;
-    background-color: rgba(0, 0, 0, 0.05);
+  margin-left: 60px;
 }
 
 .navbar-menu-right {
-    margin-left: auto;
-    gap: 20px;
+  margin-left: auto;
+  gap: 16px;
 }
 
-.navbar-menu-right a {
-    text-decoration: none;
+/* Liens de navigation */
+.navbar-menu-left a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  position: relative;
 }
 
-/* Styles des boutons et liens */
-.button-link {
-    background-color: #3D56FF;
-    color: white !important;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    font-weight: 500;
-    display: inline-block;
-    text-align: center;
-    min-width: 100px;
+.navbar-menu-left a:hover {
+  color: var(--primary-color);
+  background: var(--background-alt);
 }
 
+.navbar-menu-left a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary-color);
+  transition: var(--transition);
+  transform: translateX(-50%);
+}
+
+.navbar-menu-left a:hover::after {
+  width: 70%;
+}
+
+/* ================================================= */
+/* 2. BOUTONS ET ÉLÉMENTS D'ACTION */
+/* ================================================= */
+
+/* Bouton de connexion */
 .button-link-login {
-    color: #3D56FF !important;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
+  color: var(--primary-color) !important;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: var(--transition);
+  border: 1.5px solid transparent;
 }
 
 .button-link-login:hover {
-    background-color: rgba(61, 86, 255, 0.1);
+  background: rgba(61, 86, 255, 0.05);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
 }
 
-.button-link:hover,
-.button-link:focus {
-    background-color: #2C44CC;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(61, 86, 255, 0.3);
+/* Bouton principal */
+.button-link {
+  background: var(--primary-color);
+  color: white !important;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  display: inline-block;
+  min-width: 100px;
+  text-align: center;
 }
 
-/* Styles des icônes/dashboard */
-.dashboard-icon {
-    width: 40px;
-    height: 40px;
-    background-color: #3D56FF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 14px;
-    font-weight: bold;
-    transition: all 0.3s ease;
+.button-link:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
 
-.dashboard-icon:hover {
-    background-color: #2C44CC;
-    transform: scale(1.1);
-}
+/* ================================================= */
+/* 3. ICÔNES DASHBOARD ET PANIER */
+/* ================================================= */
 
-.dashboard-icon a {
-    color: white !important;
-    text-decoration: none;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
+/* Container des icônes */
+.dashboard-icon,
 .cart-icon {
-    position: relative;
-    margin-right: 10px;
+  position: relative;
 }
 
-.cart-icon a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
+/* Icône Dashboard */
+.dashboard-icon a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-radius: 50%;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
 }
 
-.cart-icon a:hover {
-    background-color: rgba(0, 123, 255, 0.1);
+.dashboard-icon a:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: var(--shadow-hover);
 }
 
+/* Icône Panier */
+.cart-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--background-alt);
+  border-radius: 50%;
+  text-decoration: none;
+  font-size: 20px;
+  transition: var(--transition);
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.cart-link:hover {
+  background: white;
+  border-color: var(--primary-color);
+  transform: scale(1.05);
+  box-shadow: var(--shadow);
+}
+
+/* Compteur du panier */
 .cart-count {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #007bff;
-    color: #fff;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 50%;
-    min-width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #FF6B6B, #FF4757);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  animation: pulse 2s infinite;
+}
+
+/* Animation du compteur */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Cache le compteur quand il est à 0 */
+.cart-count:empty {
+  display: none;
 }
 
 /* ================================================= */
-/* 2. STYLES DU BOUTON HAMBURGER */
+/* 4. MENU HAMBURGER MOBILE */
 /* ================================================= */
+
+.hamburger-container {
+  position: relative;
+  display: none;
+}
 
 .navbar-hamburger {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 8px;
-    color: #333;
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    align-items: center;
-    justify-content: center;
+  display: none;
+  background: var(--background-alt);
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  font-size: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  align-items: center;
+  justify-content: center;
 }
 
 .navbar-hamburger:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #3D56FF;
-}
-
-.navbar-hamburger:focus {
-    outline: 2px solid #3D56FF;
-    outline-offset: 2px;
+  background: var(--primary-color);
+  color: white;
+  transform: scale(1.05);
 }
 
 /* ================================================= */
-/* 3. STYLES DU POPOVER (Menu Déroulant Mobile) */
+/* 5. POPOVER MOBILE */
 /* ================================================= */
-
-.navbar {
-    position: relative; /* IMPORTANT - pour le positionnement */
-}
-
-.hamburger-container {
-    position: relative; /* IMPORTANT - contexte pour le popover */
-}
 
 .navbar-popover {
-    position: absolute;
-    top: 100%; /* MODIFIÉ - directement en dessous du bouton */
-    right: 0;
-    width: 280px; /* Largeur fixe */
-    max-width: calc(100vw - 24px); /* EMPÊCHE le débordement */
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(20, 32, 51, 0.15);
-    padding: 16px 0;
-    z-index: 99;
-    border: 1px solid #e1e5e9;
-    animation: popoverFadeIn 0.3s ease;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 280px;
+  max-width: calc(100vw - 24px);
+  background: var(--background);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+  padding: 16px 0;
+  margin-top: 8px;
+  z-index: 999;
+  border: 1px solid var(--border-color);
+  animation: slideDown 0.3s ease;
 }
 
-@keyframes popoverFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .navbar-popover ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .navbar-popover li {
-    margin: 0;
-    padding: 0;
+  margin: 0;
 }
 
 .navbar-popover a {
-    color: #203545;
-    text-decoration: none;
-    padding: 12px 20px;
-    display: block;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    border-radius: 0;
+  color: var(--text-dark);
+  text-decoration: none;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  transition: var(--transition);
+  border-radius: 0;
 }
 
 .navbar-popover a:hover {
-    background-color: #f8f9fa;
-    color: #3D56FF;
+  background: var(--background-alt);
+  color: var(--primary-color);
 }
 
-/* Styles spécifiques pour les boutons dans le popover */
-.navbar-popover .button-link,
-.navbar-popover .button-link-login {
-    margin: 8px 20px;
-    text-align: center;
-    display: block;
-    min-width: auto;
-}
-
+/* Icônes dans le popover */
 .navbar-popover .dashboard-icon,
 .navbar-popover .cart-icon {
-    display: inline-flex;
-    margin: 0 auto;
+  display: inline-flex;
 }
 
-.navbar-popover .cart-icon a {
-    background: none !important;
+.navbar-popover .dashboard-icon a,
+.navbar-popover .cart-link {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  background: var(--background-alt);
+}
+
+.navbar-popover .dashboard-icon a {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+}
+
+.navbar-popover .cart-count {
+  position: static;
+  margin-left: auto;
+  min-width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+
+/* Boutons dans le popover */
+.navbar-popover .button-link,
+.navbar-popover .button-link-login {
+  margin: 8px 20px;
+  justify-content: center;
+  min-width: auto;
 }
 
 /* ================================================= */
-/* 4. STYLES ADAPTATIFS (Media Queries) */
+/* 6. RESPONSIVE DESIGN */
 /* ================================================= */
 
-/* Tablette et mobile */
+/* Tablette */
+@media (max-width: 1024px) {
+  .navbar-menu-left {
+    margin-left: 40px;
+    gap: 20px;
+  }
+  
+  .navbar-menu-left a {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
-    /* Cache les menus de bureau */
-    .navbar-menu-left,
-    .navbar-menu-right {
-        display: none;
-    }
-    
-    /* Affiche le bouton hamburger */
-    .navbar-hamburger {
-        display: flex;
-    }
-    
-    /* Ajuste la taille du logo */
-    .navbar-logo {
-        height: 44px;
-    }
-    
-    /* Ajuste le padding de la navbar */
-    .navbar {
-        padding: 8px 16px;
-    }
-    
-    .navbar-menu-left {
-        margin-left: 40px;
-        gap: 30px;
-    }
+  .navbar {
+    padding: 10px 16px;
+  }
+  
+  .navbar-logo {
+    height: 40px;
+  }
+  
+  /* Cache les menus desktop */
+  .navbar-menu-left,
+  .navbar-menu-right {
+    display: none;
+  }
+  
+  /* Affiche le hamburger */
+  .hamburger-container {
+    display: block;
+  }
+  
+  .navbar-hamburger {
+    display: flex;
+  }
 }
 
-/* Téléphones mobiles */
+/* Petit mobile */
 @media (max-width: 480px) {
-    .navbar {
-        padding: 6px 12px;
-    }
-    
-    .navbar-logo {
-        height: 40px;
-    }
-    
-    .navbar-menu-left {
-        margin-left: 0;
-        gap: 20px;
-    }
-    
-    .navbar-popover {
-        width: 260px; /* AJOUTÉ */
-        max-width: calc(100vw - 16px); /* AJOUTÉ */
-    }
-    
-    .navbar-popover a {
-        padding: 10px 16px;
-        font-size: 14px;
-    }
+  .navbar {
+    padding: 8px 12px;
+  }
+  
+  .navbar-logo {
+    height: 36px;
+  }
+  
+  .navbar-hamburger {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  
+  .navbar-popover {
+    width: 260px;
+    max-width: calc(100vw - 16px);
+  }
+  
+  .navbar-popover a {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
 }
 
-/* Très petits téléphones */
+/* Très petit mobile */
 @media (max-width: 360px) {
-    .navbar {
-        padding: 4px 8px;
-    }
-    
-    .navbar-logo {
-        height: 36px;
-    }
-    
-    .navbar-hamburger {
-        width: 36px;
-        height: 36px;
-        font-size: 20px;
-    }
-    
-    .navbar-popover {
-        width: 240px; /* AJOUTÉ */
-        max-width: calc(100vw - 12px); /* AJOUTÉ */
-    }
-    
-    .navbar-popover a {
-        padding: 10px 16px;
-        font-size: 14px;
-    }
+  .navbar {
+    padding: 6px 8px;
+  }
+  
+  .navbar-logo {
+    height: 32px;
+  }
+  
+  .navbar-hamburger {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  
+  .navbar-popover {
+    width: 240px;
+  }
 }
 
 /* ================================================= */
-/* 5. ÉTATS ET ACCESSIBILITÉ */
+/* 7. ACCESSIBILITÉ ET ÉTATS */
 /* ================================================= */
 
-/* États focus pour l'accessibilité */
+/* Focus states */
 .navbar a:focus,
 .navbar button:focus {
-    outline: 2px solid #3D56FF;
-    outline-offset: 2px;
-    border-radius: 4px;
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
-/* Animation de réduction du logo au scroll (optionnel) */
+/* Réduction au scroll */
+.navbar.scrolled {
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
 .navbar.scrolled .navbar-logo {
-    height: 40px;
-    transition: height 0.3s ease;
+  height: 40px;
 }
 
-/* Support du mode sombre (optionnel) */
-@media (prefers-color-scheme: dark) {
-    .navbar {
-        background-color: #1a1a1a;
-    }
-    
-    .navbar-menu-left a {
-        color: #cccccc;
-    }
-    
-    .navbar-menu-left a:hover {
-        color: #ffffff;
-    }
-    
-    .navbar-popover {
-        background: #2d2d2d;
-        border-color: #404040;
-    }
-    
-    .navbar-popover a {
-        color: #cccccc;
-    }
-    
-    .navbar-popover a:hover {
-        background-color: #404040;
-        color: #ffffff;
-    }
+/* Mode sommeil */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a1a1a;
+    --background-alt: #2d2d2d;
+    --text-dark: #ffffff;
+    --text-light: #cccccc;
+    --text-lighter: #888888;
+    --border-color: #404040;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  
+  .navbar {
+    background: var(--background);
+    border-bottom-color: var(--border-color);
+  }
+  
+  .cart-link {
+    background: var(--background-alt);
+  }
+  
+  .cart-link:hover {
+    background: var(--background);
+  }
+}
+
+/* ================================================= */
+/* 8. ANIMATIONS ET MICRO-INTERACTIONS */
+/* ================================================= */
+
+/* Animation d'apparition des éléments */
+.navbar > * {
+  animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Retard d'animation pour les éléments enfants */
+.navbar-menu-left li:nth-child(1) { animation-delay: 0.1s; }
+.navbar-menu-left li:nth-child(2) { animation-delay: 0.2s; }
+.navbar-menu-left li:nth-child(3) { animation-delay: 0.3s; }
+.navbar-menu-right li:nth-child(1) { animation-delay: 0.4s; }
+.navbar-menu-right li:nth-child(2) { animation-delay: 0.5s; }
