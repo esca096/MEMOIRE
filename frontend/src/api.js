@@ -53,15 +53,30 @@ api.interceptors.request.use(
     }
 );
 
-// Fonction pour la recherche de produits
+// Fonction pour la recherche de produits - VERSION SÉCURISÉE
 export const searchProducts = async (query) => {
     try {
         const response = await api.get(`/api/products/search/?q=${encodeURIComponent(query)}`);
         return response.data;
     } catch (error) {
         console.error('Erreur lors de la recherche:', error);
-        // Retourner un tableau vide au lieu de throw pour éviter les crashes
-        return [];
+        
+        // Fallback: utiliser la liste complète des produits et filtrer localement
+        try {
+            console.log('Utilisation du fallback de recherche...');
+            const allProducts = await api.get('/api/products/');
+            const filtered = allProducts.data.filter(product => 
+                product.name?.toLowerCase().includes(query.toLowerCase()) ||
+                product.description?.toLowerCase().includes(query.toLowerCase()) ||
+                product.category?.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 6);
+            
+            console.log(`${filtered.length} produits trouvés en fallback`);
+            return filtered;
+        } catch (fallbackError) {
+            console.error('Erreur fallback:', fallbackError);
+            return []; // Retourner un tableau vide plutôt que de crasher
+        }
     }
 };
 
