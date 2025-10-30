@@ -541,3 +541,215 @@
 .navbar-menu-left li:nth-child(3) { animation-delay: 0.3s; }
 .navbar-menu-right li:nth-child(1) { animation-delay: 0.4s; }
 .navbar-menu-right li:nth-child(2) { animation-delay: 0.5s; }
+
+
+/* ================================================= */
+/* 9. BARRE DE RECHERCHE */
+/* ================================================= */
+
+/* Container principal de la recherche */
+.search-container {
+  position: relative;
+  flex: 0 1 400px;
+  max-width: 500px;
+  margin: 0 20px;
+}
+
+/* Barre de recherche */
+.search-input {
+  width: 100%;
+  padding: 12px 48px 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--background-alt);
+  font-size: 14px;
+  transition: var(--transition);
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: var(--primary-color);
+  background: var(--background);
+  box-shadow: 0 0 0 3px rgba(61, 86, 255, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--text-lighter);
+}
+
+/* Bouton de recherche */
+.search-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--primary-color);
+  border: none;
+  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 16px;
+}
+
+.search-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Suggestions de recherche */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1001;
+  animation: slideDown 0.2s ease;
+}
+
+.search-suggestion-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.search-suggestion-item:hover {
+  background: var(--background-alt);
+}
+
+.search-suggestion-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.search-suggestion-info {
+  flex: 1;
+}
+
+.search-suggestion-name {
+  font-weight: 500;
+  color: var(--text-dark);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.search-suggestion-price {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 13px;
+}
+
+.search-suggestion-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-lighter);
+  font-style: italic;
+}
+
+/* Overlay pour fermer les suggestions */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: transparent;
+}
+
+/* État de chargement */
+.search-loading {
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ================================================= */
+/* RESPONSIVE BARRE DE RECHERCHE */
+/* ================================================= */
+
+/* Tablette */
+@media (max-width: 1024px) {
+  .search-container {
+    flex: 0 1 300px;
+    margin: 0 15px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .search-container {
+    order: 3;
+    flex: 1 1 100%;
+    margin: 10px 0 0 0;
+    max-width: none;
+  }
+  
+  .navbar {
+    flex-wrap: wrap;
+  }
+  
+  .search-input {
+    padding: 10px 44px 10px 12px;
+    font-size: 16px; /* Évite le zoom sur iOS */
+  }
+  
+  .search-suggestions {
+    position: fixed;
+    top: 80px;
+    left: 16px;
+    right: 16px;
+    max-height: 50vh;
+  }
+}
+
+/* Petit mobile */
+@media (max-width: 480px) {
+  .search-container {
+    margin: 8px 0 0 0;
+  }
+  
+  .search-input {
+    padding: 8px 40px 8px 12px;
+  }
+  
+  .search-suggestions {
+    top: 70px;
+    left: 12px;
+    right: 12px;
+  }
+}
