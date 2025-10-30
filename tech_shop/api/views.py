@@ -115,7 +115,9 @@ class ProductView(generics.ListAPIView):
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]  # Accessible sans connexion
 
-# BARRE DE RECHERCHE
+# =============================================================================
+# RECHERCHE DE PRODUITS
+# =============================================================================
 class ProductSearchView(APIView):
     """Endpoint pour la recherche de produits"""
     permission_classes = [AllowAny]
