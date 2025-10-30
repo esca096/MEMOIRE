@@ -631,3 +631,24 @@ def delete_order_history(request):
         return Response({
             'error': f'Erreur lors de la suppression: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# BARRE DE RECHERCHE
+class ProductSearchView(APIView):
+    """Endpoint pour la recherche de produits"""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        query = request.GET.get('q', '').strip()
+        
+        if not query or len(query) < 2:
+            return Response([])
+        
+        # Recherche dans les noms et descriptions
+        products = Product.objects.filter(
+            models.Q(name__icontains=query) | 
+            models.Q(description__icontains=query) |
+            models.Q(category__icontains=query)
+        )[:10]  # Limite à 10 résultats
+        
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
