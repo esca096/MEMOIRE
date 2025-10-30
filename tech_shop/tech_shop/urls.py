@@ -115,7 +115,7 @@ urlpatterns = [
     path('api/delete_order_history/', delete_order_history, name='delete_order_history'),
 
     # BARRE DE RECHERCHE
-    path('api/products/search/', ProductSearchView.as_view(), name='product-search'),
+    path('products/search/', ProductSearchView.as_view(), name='product-search'),
 
 ]
 
