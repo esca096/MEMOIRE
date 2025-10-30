@@ -58,6 +58,7 @@ urlpatterns = [
     path('products/', ProductView.as_view(), name='product_list'),  # Liste produits (vue publique)
     path('api/products/', AdminProductView.as_view(), name='admin_product'),  # Gestion produits admin (CREATE)
     path('api/products/<int:pk>/', AdminEditProductView.as_view(), name='admin_product_detail'),  # Édition produit admin (UPDATE/DELETE)
+    path('api/products/search/', ProductSearchView.as_view(), name='product-search'),  # RECHERCHE DE PRODUITS
     
     # -------------------------------------------------------------------------
     # PANIER D'ACHAT
@@ -113,9 +114,6 @@ urlpatterns = [
     # SUPPRESSION HISTORIQUE COMMANDES - CORRIGÉ
     # =============================================================================
     path('api/delete_order_history/', delete_order_history, name='delete_order_history'),
-
-    # BARRE DE RECHERCHE
-    path('products/search/', ProductSearchView.as_view(), name='product-search'),
 
 ]
 
