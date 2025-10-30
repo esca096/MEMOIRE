@@ -544,7 +544,7 @@
 
 
 /* ================================================= */
-/* 9. BARRE DE RECHERCHE */
+/* 9. BARRE DE RECHERCHE - VERSION CORRIGÉE */
 /* ================================================= */
 
 /* Container principal de la recherche */
@@ -558,13 +558,15 @@
 /* Barre de recherche */
 .search-input {
   width: 100%;
-  padding: 12px 48px 12px 16px;
+  padding: 12px 48px 12px 16px; /* Plus d'espace à droite pour le bouton */
   border: 2px solid var(--border-color);
   border-radius: var(--radius);
   background: var(--background-alt);
   font-size: 14px;
   transition: var(--transition);
   outline: none;
+  font-family: inherit;
+  box-sizing: border-box; /* Important pour le calcul des dimensions */
 }
 
 .search-input:focus {
@@ -577,7 +579,7 @@
   color: var(--text-lighter);
 }
 
-/* Bouton de recherche */
+/* Bouton de recherche - POSITIONNEMENT CORRIGÉ */
 .search-button {
   position: absolute;
   right: 8px;
@@ -595,11 +597,33 @@
   cursor: pointer;
   transition: var(--transition);
   font-size: 16px;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
 }
 
 .search-button:hover {
   background: var(--primary-dark);
   transform: translateY(-50%) scale(1.05);
+}
+
+/* Indicateur de chargement */
+.search-loading {
+  position: absolute;
+  right: 48px; /* Place à gauche du bouton */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
 }
 
 /* Suggestions de recherche */
@@ -679,27 +703,8 @@
   background: transparent;
 }
 
-/* État de chargement */
-.search-loading {
-  position: absolute;
-  right: 48px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border-color);
-  border-top: 2px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: translateY(-50%) rotate(0deg); }
-  100% { transform: translateY(-50%) rotate(360deg); }
-}
-
 /* ================================================= */
-/* RESPONSIVE BARRE DE RECHERCHE */
+/* RESPONSIVE BARRE DE RECHERCHE - CORRIGÉ */
 /* ================================================= */
 
 /* Tablette */
@@ -721,11 +726,18 @@
   
   .navbar {
     flex-wrap: wrap;
+    padding-bottom: 10px; /* Ajoute de l'espace pour la barre de recherche */
   }
   
   .search-input {
     padding: 10px 44px 10px 12px;
     font-size: 16px; /* Évite le zoom sur iOS */
+  }
+  
+  .search-button {
+    right: 6px;
+    width: 30px;
+    height: 30px;
   }
   
   .search-suggestions {
@@ -747,9 +759,30 @@
     padding: 8px 40px 8px 12px;
   }
   
+  .search-button {
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
   .search-suggestions {
     top: 70px;
     left: 12px;
     right: 12px;
   }
+}
+
+/* Correction spécifique pour le bouton dans le menu mobile */
+.navbar-popover .search-container {
+  margin: 10px 20px;
+}
+
+.navbar-popover .search-input {
+  background: var(--background);
+  border-color: var(--border-color);
+}
+
+.navbar-popover .search-button {
+  background: var(--primary-color);
 }
