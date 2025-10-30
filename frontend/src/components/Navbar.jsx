@@ -1,23 +1,31 @@
 /**
  * Fichier: frontend/src/components/Navbar.jsx
- *
+ * 
  * Description (FR):
- * - Barre de navigation principale de l'application.
- * - Inclut la gestion du menu mobile (popover) avec un bouton hamburger.
+ * - Barre de navigation principale avec système de recherche intégré
+ * - Recherche en temps réel avec suggestions de produits
+ * - Gestion du menu mobile (popover) avec bouton hamburger
  */
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom"; 
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom"; 
 import logo from "../assets/logo.png"; 
 import '../styles/Navbar.css'; 
 import { useAuthentication } from "../auth"; 
 import { useCart } from "./CartContext"; 
+import { searchProducts } from "../api"; // Vous devrez créer cette fonction API
 
 function Navbar() {
     const { isAuthorized, logout } = useAuthentication(); 
-    const {state} = useCart(); 
+    const { state } = useCart(); 
     const cart = state.cart || []; 
     const [open, setOpen] = useState(false); 
+    const [searchQuery, setSearchQuery] = useState("");
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const searchRef = useRef(null);
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         logout(); 
@@ -27,6 +35,69 @@ function Navbar() {
         logout(); 
         setOpen(false); 
     }
+
+    // Recherche en temps réel
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchQuery.trim().length > 2) {
+                performSearch(searchQuery);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
+
+    // Fermer les suggestions en cliquant à l'extérieur
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const performSearch = async (query) => {
+        setIsLoading(true);
+        try {
+            const results = await searchProducts(query);
+            setSuggestions(results);
+            setShowSuggestions(true);
+        } catch (error) {
+            console.error('Erreur recherche:', error);
+            setSuggestions([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+            setShowSuggestions(false);
+            setSearchQuery("");
+        }
+    };
+
+    const handleSuggestionClick = (product) => {
+        navigate(`/product/${product.id}`);
+        setShowSuggestions(false);
+        setSearchQuery("");
+    };
+
+    const clearSearch = () => {
+        setSearchQuery("");
+        setSuggestions([]);
+        setShowSuggestions(false);
+    };
 
     return (
         <>
@@ -44,6 +115,67 @@ function Navbar() {
                     <li><Link to="/contact">Contact</Link></li>
                 </ul>
                 
+                {/* BARRE DE RECHERCHE */}
+                <div className="search-container" ref={searchRef}>
+                    <form onSubmit={handleSearchSubmit}>
+                        <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Rechercher un produit..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => searchQuery.length > 2 && setShowSuggestions(true)}
+                        />
+                        {isLoading && <div className="search-loading"></div>}
+                        <button type="submit" className="search-button">
+                            🔍
+                        </button>
+                    </form>
+
+                    {/* Suggestions de recherche */}
+                    {showSuggestions && suggestions.length > 0 && (
+                        <>
+                            <div className="search-overlay" onClick={() => setShowSuggestions(false)} />
+                            <div className="search-suggestions">
+                                {suggestions.map((product) => (
+                                    <div
+                                        key={product.id}
+                                        className="search-suggestion-item"
+                                        onClick={() => handleSuggestionClick(product)}
+                                    >
+                                        {product.image && (
+                                            <img
+                                                src={product.image}
+                                                alt={product.name}
+                                                className="search-suggestion-image"
+                                            />
+                                        )}
+                                        <div className="search-suggestion-info">
+                                            <div className="search-suggestion-name">
+                                                {product.name}
+                                            </div>
+                                            <div className="search-suggestion-price">
+                                                {product.price} €
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {showSuggestions && suggestions.length === 0 && searchQuery.length > 2 && (
+                        <>
+                            <div className="search-overlay" onClick={() => setShowSuggestions(false)} />
+                            <div className="search-suggestions">
+                                <div className="search-suggestion-empty">
+                                    Aucun produit trouvé pour "{searchQuery}"
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+                
                 {/* Menu de navigation droite - actions utilisateur */}
                 <ul className="navbar-menu-right">
                     { isAuthorized ? (
@@ -53,7 +185,7 @@ function Navbar() {
                             <li className="dashboard-icon">
                                 <Link to="/dashboard">📊</Link>
                             </li>
-                            {/* NOUVELLE ICÔNE PANIER AVEC ICÔNE VISUELLE */}
+                            {/* Icône Panier */}
                             <li className="cart-icon">
                                 <Link to="/cart" className="cart-link">
                                     🛒
@@ -73,7 +205,7 @@ function Navbar() {
                                 <Link to="/login" className="button-link-login">Se connecter</Link>
                             </li>
                             <li>
-                                <Link to="/register" className="button-link">S'incrire</Link>
+                                <Link to="/register" className="button-link">S'inscrire</Link>
                             </li>
                         </>
                     )}
@@ -97,6 +229,24 @@ function Navbar() {
                                 <li><Link to="/why" onClick={() => setOpen(false)}>Pourquoi nous ?</Link></li>
                                 <li><Link to="/about" onClick={() => setOpen(false)}>À propos</Link></li>
                                 <li><Link to="/contact" onClick={() => setOpen(false)}>Contact</Link></li>
+
+                                {/* Barre de recherche mobile */}
+                                <li className="search-mobile-item">
+                                    <div className="search-container">
+                                        <form onSubmit={handleSearchSubmit}>
+                                            <input
+                                                type="text"
+                                                className="search-input"
+                                                placeholder="Rechercher..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                            <button type="submit" className="search-button">
+                                                🔍
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
 
                                 { isAuthorized ? (
                                     <>
