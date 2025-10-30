@@ -60,7 +60,8 @@ export const searchProducts = async (query) => {
         return response.data;
     } catch (error) {
         console.error('Erreur lors de la recherche:', error);
-        throw error;
+        // Retourner un tableau vide au lieu de throw pour éviter les crashes
+        return [];
     }
 };
 
