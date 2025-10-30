@@ -53,4 +53,15 @@ api.interceptors.request.use(
     }
 );
 
+// Fonction pour la recherche de produits
+export const searchProducts = async (query) => {
+    try {
+        const response = await api.get(`/api/products/search/?q=${encodeURIComponent(query)}`);
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la recherche:', error);
+        throw error;
+    }
+};
+
 export default api;  // Export de l'instance Axios configurée
