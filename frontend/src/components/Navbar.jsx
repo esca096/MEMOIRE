@@ -13,7 +13,7 @@ import logo from "../assets/logo.png";
 import '../styles/Navbar.css'; 
 import { useAuthentication } from "../auth"; 
 import { useCart } from "./CartContext"; 
-import { searchProducts } from "../api"; // Vous devrez créer cette fonction API
+import { searchProducts } from "../api"; // Chemin correct vers votre fichier api.js
 
 function Navbar() {
     const { isAuthorized, logout } = useAuthentication(); 
