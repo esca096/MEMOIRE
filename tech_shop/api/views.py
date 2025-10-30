@@ -24,6 +24,7 @@ Comment ces fichiers se connectent :
 # IMPORTS DJANGO ET REST FRAMEWORK
 # =============================================================================
 from django.shortcuts import redirect
+from django.db.models import Q
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
 from .serialzers import UserSerializer, ProductSerializer, CartSerializer, OrderSerializer, ReviewSerializer
@@ -48,7 +49,6 @@ from django.forms import ValidationError
 from .models import Product, Cart, Order, Review
 from .recs_tfidf import query_similar
 
-from django.db.models import Q
 
 # =============================================================================
 # CONFIGURATION STRIPE
@@ -117,26 +117,36 @@ class ProductView(generics.ListAPIView):
 
 # =============================================================================
 # RECHERCHE DE PRODUITS
-# =============================================================================
+# ============================================================================
+
 class ProductSearchView(APIView):
     """Endpoint pour la recherche de produits"""
     permission_classes = [AllowAny]
     
     def get(self, request):
-        query = request.GET.get('q', '').strip()
-        
-        if not query or len(query) < 2:
-            return Response([])
-        
-        # Recherche dans les noms et descriptions
-        products = Product.objects.filter(
-            models.Q(name__icontains=query) | 
-            models.Q(description__icontains=query) |
-            models.Q(category__icontains=query)
-        )[:10]  # Limite à 10 résultats
-        
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+        try:
+            query = request.GET.get('q', '').strip()
+            print(f"🔍 Recherche: '{query}'")  # Debug
+            
+            if not query or len(query) < 2:
+                return Response([])
+            
+            # Recherche dans les noms et descriptions
+            products = Product.objects.filter(
+                Q(name__icontains=query) | 
+                Q(description__icontains=query) |
+                Q(category__icontains=query)
+            )[:10]
+            
+            print(f"✅ {products.count()} produits trouvés")  # Debug
+            serializer = ProductSerializer(products, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            print(f"❌ Erreur dans ProductSearchView: {str(e)}")
+            import traceback
+            print(f"📋 Stack trace: {traceback.format_exc()}")
+            return Response({"error": str(e)}, status=500)
 
 # =============================================================================
 # VUE PANIER
