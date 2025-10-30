@@ -48,6 +48,8 @@ from django.forms import ValidationError
 from .models import Product, Cart, Order, Review
 from .recs_tfidf import query_similar
 
+from django.db.models import Q
+
 # =============================================================================
 # CONFIGURATION STRIPE
 # =============================================================================
