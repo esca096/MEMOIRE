@@ -567,12 +567,14 @@
   outline: none;
   font-family: inherit;
   box-sizing: border-box; /* Important pour le calcul des dimensions */
+  color: #ffffff; /* TEXTE BLANC AJOUTÉ ICI */
 }
 
 .search-input:focus {
   border-color: var(--primary-color);
   background: var(--background);
   box-shadow: 0 0 0 3px rgba(61, 86, 255, 0.1);
+  color: #ffffff; /* TEXTE BLANC EN FOCUS AUSSI */
 }
 
 .search-input::placeholder {
@@ -732,6 +734,7 @@
   .search-input {
     padding: 10px 44px 10px 12px;
     font-size: 16px; /* Évite le zoom sur iOS */
+    color: #ffffff; /* TEXTE BLANC SUR MOBILE AUSSI */
   }
   
   .search-button {
@@ -757,6 +760,7 @@
   
   .search-input {
     padding: 8px 40px 8px 12px;
+    color: #ffffff; /* TEXTE BLANC SUR PETIT MOBILE AUSSI */
   }
   
   .search-button {
@@ -781,6 +785,7 @@
 .navbar-popover .search-input {
   background: var(--background);
   border-color: var(--border-color);
+  color: #ffffff; /* TEXTE BLANC DANS LE POPOVER MOBILE */
 }
 
 .navbar-popover .search-button {
