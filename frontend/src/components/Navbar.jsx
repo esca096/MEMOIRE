@@ -13,7 +13,7 @@ import logo from "../assets/logo.png";
 import '../styles/Navbar.css'; 
 import { useAuthentication } from "../auth"; 
 import { useCart } from "./CartContext"; 
-import { searchProducts } from "../api"; // Chemin correct vers votre fichier api.js
+// import { searchProducts } from "../api"; // Chemin correct vers votre fichier api.js
 
 function Navbar() {
     const { isAuthorized, logout } = useAuthentication(); 
@@ -116,65 +116,9 @@ function Navbar() {
                 </ul>
                 
                 {/* BARRE DE RECHERCHE */}
-                <div className="search-container" ref={searchRef}>
-                    <form onSubmit={handleSearchSubmit}>
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder="Rechercher un produit..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={() => searchQuery.length > 2 && setShowSuggestions(true)}
-                        />
-                        {isLoading && <div className="search-loading"></div>}
-                        <button type="submit" className="search-button">
-                            🔍
-                        </button>
-                    </form>
-
+                
                     {/* Suggestions de recherche */}
-                    {showSuggestions && suggestions.length > 0 && (
-                        <>
-                            <div className="search-overlay" onClick={() => setShowSuggestions(false)} />
-                            <div className="search-suggestions">
-                                {suggestions.map((product) => (
-                                    <div
-                                        key={product.id}
-                                        className="search-suggestion-item"
-                                        onClick={() => handleSuggestionClick(product)}
-                                    >
-                                        {product.image && (
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                className="search-suggestion-image"
-                                            />
-                                        )}
-                                        <div className="search-suggestion-info">
-                                            <div className="search-suggestion-name">
-                                                {product.name}
-                                            </div>
-                                            <div className="search-suggestion-price">
-                                                {product.price} €
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
-                    )}
-
-                    {showSuggestions && suggestions.length === 0 && searchQuery.length > 2 && (
-                        <>
-                            <div className="search-overlay" onClick={() => setShowSuggestions(false)} />
-                            <div className="search-suggestions">
-                                <div className="search-suggestion-empty">
-                                    Aucun produit trouvé pour "{searchQuery}"
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
+                    
                 
                 {/* Menu de navigation droite - actions utilisateur */}
                 <ul className="navbar-menu-right">
