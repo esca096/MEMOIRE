@@ -113,7 +113,7 @@ urlpatterns = [
     # =============================================================================
     # SUPPRESSION HISTORIQUE COMMANDES - CORRIGÉ
     # =============================================================================
-    path('api/delete_order_history/', delete_order_history, name='delete_order_history'),
+    #path('api/delete_order_history/', delete_order_history, name='delete_order_history'),
 
 ]
 
