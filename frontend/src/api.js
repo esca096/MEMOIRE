@@ -54,38 +54,38 @@ api.interceptors.request.use(
 );
 
 // Fonction pour la recherche de produits - VERSION ULTRA SÉCURISÉE
-export const searchProducts = async (query) => {
-    try {
-        console.log('🔍 Recherche en cours:', query);
+// export const searchProducts = async (query) => {
+//     try {
+//         console.log('🔍 Recherche en cours:', query);
         
-        // D'abord essayer l'endpoint de recherche
-        try {
-            const response = await api.get(`/api/products/search/?q=${encodeURIComponent(query)}`);
-            console.log('✅ Recherche API réussie:', response.data.length, 'résultats');
-            return response.data;
-        } catch (apiError) {
-            console.log('⚠️ Endpoint search non disponible, utilisation du fallback...');
-        }
+//         // D'abord essayer l'endpoint de recherche
+//         try {
+//             const response = await api.get(`/api/products/search/?q=${encodeURIComponent(query)}`);
+//             console.log('✅ Recherche API réussie:', response.data.length, 'résultats');
+//             return response.data;
+//         } catch (apiError) {
+//             console.log('⚠️ Endpoint search non disponible, utilisation du fallback...');
+//         }
         
-        // Fallback: utiliser la liste complète des produits
-        console.log('🔄 Récupération de tous les produits pour fallback...');
-        const allProducts = await api.get('/api/products/');
+//         // Fallback: utiliser la liste complète des produits
+//         console.log('🔄 Récupération de tous les produits pour fallback...');
+//         const allProducts = await api.get('/api/products/');
         
-        // Filtrer localement
-        const filtered = allProducts.data.filter(product => 
-            product.name?.toLowerCase().includes(query.toLowerCase()) ||
-            product.description?.toLowerCase().includes(query.toLowerCase()) ||
-            product.category?.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 6);
+//         // Filtrer localement
+//         const filtered = allProducts.data.filter(product => 
+//             product.name?.toLowerCase().includes(query.toLowerCase()) ||
+//             product.description?.toLowerCase().includes(query.toLowerCase()) ||
+//             product.category?.toLowerCase().includes(query.toLowerCase())
+//         ).slice(0, 6);
         
-        console.log(`✅ ${filtered.length} produits trouvés en fallback`);
-        return filtered;
+//         console.log(`✅ ${filtered.length} produits trouvés en fallback`);
+//         return filtered;
         
-    } catch (error) {
-        console.error('❌ Erreur recherche:', error);
-        console.log('📦 Retour tableau vide');
-        return []; // Retourner un tableau vide plutôt que de crasher
-    }
-};
+//     } catch (error) {
+//         console.error('❌ Erreur recherche:', error);
+//         console.log('📦 Retour tableau vide');
+//         return []; // Retourner un tableau vide plutôt que de crasher
+//     }
+// };
 
 export default api;  // Export de l'instance Axios configurée
