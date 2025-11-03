@@ -634,15 +634,16 @@ def verify_ipaymoney_payment(request, order_id):
 # =============================================================================
 # SUPPRESSION HISTORIQUE DES COMMANDES (ADMIN) - VERSION PROFESSIONNELLE DRF
 # =============================================================================
+"""
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def delete_order_history(request):
-    """
+    
     DELETE /api/delete_order_history/
     
     Supprime tout l'historique des commandes.
     Réservé aux administrateurs.
-    """
+    
     try:
         # Compter le nombre de commandes avant suppression
         order_count = Order.objects.count()
@@ -666,3 +667,4 @@ def delete_order_history(request):
         return Response({
             'error': f'Erreur lors de la suppression: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    """
