@@ -175,22 +175,7 @@ function Navbar() {
                                 <li><Link to="/contact" onClick={() => setOpen(false)}>Contact</Link></li>
 
                                 {/* Barre de recherche mobile */}
-                                <li className="search-mobile-item">
-                                    <div className="search-container">
-                                        <form onSubmit={handleSearchSubmit}>
-                                            <input
-                                                type="text"
-                                                className="search-input"
-                                                placeholder="Rechercher..."
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                            <button type="submit" className="search-button">
-                                                🔍
-                                            </button>
-                                        </form>
-                                    </div>
-                                </li>
+                                
 
                                 { isAuthorized ? (
                                     <>
